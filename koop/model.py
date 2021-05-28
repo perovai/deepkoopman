@@ -1,52 +1,133 @@
-import torch.nn as nn
-
-from koop.utils import init_weights
-
-
-class Network(nn.Sequential):
-    def __init__(self, widths=[], dist_weights=[], dist_biases=[], scale=1):
-        super().__init__()
-
-        self.dist_weights = dist_weights
-        self.dist_biases = dist_biases
-        self.scale = scale
-
-        for i, (in_d, out_d) in enumerate(zip(widths[:-1], widths[1:])):
-            self.add_module(f"Layer-{i}", nn.Linear(in_d, out_d))
-            if i < len(widths) - 2:
-                self.add_module(f"ReLU-{i}", nn.ReLU())
-
-        self.init_parameters()
-
-    def init_parameters(self):
-        for k, module in enumerate(self.children()):
-            wd = (
-                self.dist_weights[k]
-                if isinstance(self.dist_weights[k], list)
-                else self.dist_weights
-            )
-            bd = (
-                self.dist_biases[k]
-                if isinstance(self.dist_biases[k], list)
-                else self.dist_biases
-            )
-            init_weights(module, wd, bd, self.scale)
+import torch
+import numpy as np
 
 
-class AutoEncoder(nn.Module):
-    def __init__(self, widths, dist_weights, dist_biases, scale):
-        super().__init__()
-
-        self.encoder = Network(widths, dist_weights, dist_biases, scale)
-        self.decoder = Network(
-            widths[::-1],
-            dist_weights[::-1] if isinstance(dist_weights, list) else dist_weights,
-            dist_biases[::-1] if isinstance(dist_biases, list) else dist_biases,
-            scale,
+class Encoder(torch.nn.Module):
+    def __init__(self, params):
+        super(Encoder, self).__init__()
+        self.hidden_layers = params["hidden_layers"]
+        self.hidden_dim = params["hidden_dim"]
+        self.input_dim = params["input_dim"]
+        self.output_dim = params["latent_dim"]
+        self.input_layer = torch.nn.Linear(self.input_dim, self.hidden_dim)
+        self.hidden_layers = torch.nn.ModuleList(
+            [
+                torch.nn.Linear(self.hidden_dim, self.hidden_dim)
+                for _ in range(self.hidden_layers - 1)
+            ]
         )
+        self.output_layer = torch.nn.Linear(self.hidden_dim, self.output_dim)
 
-    def forward(self, x):
-        z = self.encoder(x)
-        y = self.decoder(z)
+    def forward(self, inputs):
+        x = torch.relu(self.input_layer(inputs))
+        for hidden_layer in self.hidden_layers:
+            x = torch.relu(hidden_layer(x))
+        output = self.output_layer(x)
 
-        return y
+        return output
+
+
+class Decoder(torch.nn.Module):
+    def __init__(self, params):
+        super(Decoder, self).__init__()
+        self.hidden_layers = params["hidden_layers"]
+        self.hidden_dim = params["hidden_dim"]
+        self.input_dim = 4
+        self.output_dim = 4
+        self.input_layer = torch.nn.Linear(self.input_dim, self.hidden_dim)
+        self.hidden_layers = torch.nn.ModuleList(
+            [
+                torch.nn.Linear(self.hidden_dim, self.hidden_dim)
+                for _ in range(self.hidden_layers - 1)
+            ]
+        )
+        self.output_layer = torch.nn.Linear(self.hidden_dim, self.output_dim)
+
+    def forward(self, inputs):
+        x = torch.relu(self.input_layer(inputs))
+        for hidden_layer in self.hidden_layers:
+            x = torch.relu(hidden_layer(x))
+        output = self.output_layer(x)
+
+        return output
+
+
+class Auxiliary(torch.nn.Module):
+    def __init__(self, params):
+        super(Auxiliary, self).__init__()
+        self.hidden_layers = params["hidden_layers_aux"]
+        self.hidden_dim = params["hidden_dim_aux"]
+        self.input_dim = params["latent_dim"]
+        self.output_dim = 10
+        self.input_layer = torch.nn.Linear(self.input_dim, self.hidden_dim)
+        self.hidden_layers = torch.nn.ModuleList(
+            [
+                torch.nn.Linear(self.hidden_dim, self.hidden_dim)
+                for _ in range(self.hidden_layers - 1)
+            ]
+        )
+        self.output_layer = torch.nn.Linear(self.hidden_dim, self.output_dim)
+
+    def forward(self, inputs):
+        x = torch.relu(self.input_layer(inputs))
+        for hidden_layer in self.hidden_layers:
+            x = torch.relu(hidden_layer(x))
+        parameters = self.output_layer(x)
+        koopman_operator = self.get_koopman(parameters)
+
+        return koopman_operator
+
+    def get_koopman(self, parameters):
+        frequencies = parameters[:, :6]
+        dampings = parameters[:, 6:]
+
+        tri_indices = np.triu_indices(4, 1)
+        diag_indices = np.diag_indices(4)
+        koopman_log = torch.zeros(parameters.shape[0], 4, 4).to(parameters.device)
+        koopman_damping = torch.zeros(parameters.shape[0], 4, 4).to(parameters.device)
+        koopman_log[:, tri_indices[0], tri_indices[1]] = frequencies
+        koopman_log -= koopman_log.permute(0, 2, 1)
+        koopman_damping[:, diag_indices[0], diag_indices[1]] = dampings
+        koopman_damping = torch.tanh(koopman_damping)
+
+        koopman_rotation = torch.matrix_exp(koopman_log)
+        koopman_operator = koopman_damping @ koopman_rotation
+
+        return koopman_operator
+
+
+class DeepKoopman(torch.nn.Module):
+    def __init__(self, params):
+        super().__init__()
+        self.num_timesteps = params["sequence_length"]
+        self.encoder = Encoder(params)
+        self.decoder = Decoder(params)
+        self.auxiliary = Auxiliary(params)
+
+    def forward(self, inputs):
+        embedding = self.encoder(inputs)
+        embedding_evolution = self.evolve_embedding(embedding)
+        reconstruction = self.decoder(embedding)
+        state_evolution = self.decoder(embedding_evolution)
+
+        return reconstruction, embedding_evolution, state_evolution
+
+    def evolve_embedding(self, embedding):
+        embedding_evolution = torch.zeros(embedding.shape[0], self.num_timesteps, 4).to(
+            embedding.device
+        )
+        for timestep in range(self.num_timesteps):
+            koopman_operator = self.auxiliary(embedding)
+            next_embedding = (koopman_operator @ embedding.unsqueeze(2)).squeeze()
+            embedding_evolution[:, timestep, :] = next_embedding
+            embedding = next_embedding
+
+        return embedding_evolution
+
+    def predict_next(self, inputs):
+        embedding = self.encoder(inputs)
+        koopman_operator = self.auxiliary(embedding)
+        next_embedding = (koopman_operator @ embedding.unsqueeze(2)).squeeze()
+        next_state = self.decoder(next_embedding)
+
+        return next_state

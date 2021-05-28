@@ -1,0 +1,23 @@
+data:
+  discrete: ./datasets/DiscreteSpectrumExample
+
+sequence_length:
+  discrete: 51
+
+batch_size:
+  discrete: 8
+
+hidden_layers:
+  discrete: 2
+
+hidden_dim:
+  discrete: 128
+
+hidden_layers_aux:
+  discrete: 1
+
+hidden_dim_aux:
+  discrete: 64
+
+latent_dim:
+  discrete: 3

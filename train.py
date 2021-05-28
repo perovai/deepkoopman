@@ -1,15 +1,22 @@
-import torch
-from koop.model import AutoEncoder
+from koop.dataloading import create_dataloaders
 from koop.utils import load_params
+from koop.model import DeepKoopman
+import minydra
 
 if __name__ == "__main__":
 
-    params = load_params("./params.yaml", "task1")
+    args = minydra.Parser().args
+    if args:
+        args.pretty_print()
 
-    model = AutoEncoder(
-        params["widths"], params["dist_w"], params["dist_b"], params["scale"]
+    params = load_params(
+        args.get("yaml", "./config/params.yaml"), args.get("task", "discrete")
     )
 
-    dummy_data = torch.rand(10, params["widths"][0])
+    dataloaders = create_dataloaders(
+        params["data"], params["sequence_length"], params["batch_size"]
+    )
 
-    y = model(dummy_data)
+    params["input_dim"] = dataloaders["train"].dataset.input_dim
+
+    model = DeepKoopman(params)
