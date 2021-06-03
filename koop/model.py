@@ -53,6 +53,12 @@ class Decoder(torch.nn.Module):
 
 
 class Auxiliary(torch.nn.Module):
+    """
+    This network takes the encoded state, outputs the parameters of the Koopman 
+    operator (omega and mu) and then builds the operator by matrix exponentiation
+    (to produce a n-dimensional rotation matrix).
+    It is called Lambda in the original paper.
+    """
     def __init__(self, params):
         super(Auxiliary, self).__init__()
         self.hidden_layers = params["hidden_layers_aux"]
