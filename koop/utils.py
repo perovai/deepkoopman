@@ -1,9 +1,16 @@
+from pathlib import Path
+from addict import Dict
+
 import torch.nn.init as init
 from yaml import safe_load
-from pathlib import Path
 
 
-def load_params(path="./params.yaml", task="task1"):
+class Opts(Dict):
+    def __missing__(self, key):
+        raise KeyError(key)
+
+
+def load_opts(path="./config/opts.yaml", task="discrete"):
     p = Path(path).expanduser().resolve()
     print("Loading parameters from {}".format(str(p)))
     with p.open("r") as f:
@@ -19,7 +26,7 @@ def load_params(path="./params.yaml", task="task1"):
         else:
             params[key] = value
 
-    return params
+    return Opts(params)
 
 
 def init_weights(m, w_dist, b_dist, scale):

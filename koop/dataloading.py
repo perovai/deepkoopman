@@ -1,7 +1,8 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, Dataset
 
 
 class KoopmanDataset(Dataset):
@@ -43,6 +44,17 @@ def create_datasets(path, sequence_length):
 
 
 def create_dataloaders(path, sequence_length, batch_size):
+    """
+    Return a dict of data loaders with keys train/val/test
+
+    Args:
+        path (pathlike): Path to read the data from
+        sequence_length (int): How to reshape the data from N x dim to B x seq x dim
+        batch_size (int): Batch size
+
+    Returns:
+        dict: {"train": dataloader, "val": dataloader, "test": dataloader}
+    """
     path = Path(path).expanduser().resolve()
     datasets = create_datasets(path, sequence_length)
     return {

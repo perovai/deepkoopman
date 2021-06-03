@@ -1,7 +1,7 @@
-from koop.dataloading import create_dataloaders
-from koop.utils import load_params
-from koop.model import DeepKoopman
 import minydra
+
+from koop.utils import load_opts
+from koop.trainer import Trainer
 
 if __name__ == "__main__":
 
@@ -9,14 +9,10 @@ if __name__ == "__main__":
     if args:
         args.pretty_print()
 
-    params = load_params(
-        args.get("yaml", "./config/params.yaml"), args.get("task", "discrete")
+    opts = load_opts(
+        args.get("yaml", "./config/opts.yaml"), args.get("task", "discrete")
     )
 
-    dataloaders = create_dataloaders(
-        params["data"], params["sequence_length"], params["batch_size"]
-    )
-
-    params["input_dim"] = dataloaders["train"].dataset.input_dim
-
-    model = DeepKoopman(params)
+    trainer = Trainer(opts)
+    trainer.setup()
+    trainer.train()

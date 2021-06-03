@@ -21,3 +21,10 @@ hidden_dim_aux:
 
 latent_dim:
   discrete: 3
+
+losses:
+  discrete:
+    reconstruction: true
+    koopman: false
+
+epochs: 4
