@@ -1,7 +1,7 @@
 from pathlib import Path
-from addict import Dict
 
 import torch.nn.init as init
+from addict import Dict
 from yaml import safe_load
 
 

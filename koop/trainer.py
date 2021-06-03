@@ -1,9 +1,9 @@
 import torch
 
 from koop.dataloading import create_dataloaders
-from koop.model import DeepKoopman
-from koop.losses import Loss
 from koop.logger import Logger
+from koop.losses import Loss
+from koop.model import DeepKoopman
 
 
 class Trainer:

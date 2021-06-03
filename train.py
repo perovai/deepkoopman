@@ -1,7 +1,7 @@
 import minydra
 
-from koop.utils import load_opts
 from koop.trainer import Trainer
+from koop.utils import load_opts
 
 if __name__ == "__main__":
 
