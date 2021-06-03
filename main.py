@@ -289,7 +289,7 @@ def train_and_monitor(hyperparams):
             leave=True,
         )
 
-        for i, ground_truth in progress:
+        for _, ground_truth in progress:
             state, sequence = ground_truth
             state = state.to(device)
             sequence = sequence.to(device)

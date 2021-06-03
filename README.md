@@ -46,7 +46,8 @@ KeyError: 'losses'
 Try with dummy data (for now!)
 
 ```bash
-(dkenv) $ python train.py task=discrete
+# using minydra all options can be overwritten from the command-line
+(dkenv) $ python train.py task=discrete dev=true epochs=1
 ```
 
 ## Misc

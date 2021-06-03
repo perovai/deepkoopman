@@ -4,9 +4,11 @@ class Logger:
         self.exp = exp
         self.global_step = 0
 
-    def print_step(self, losses={}):
-        losses_str = " | ".join(
-            "{}: {:.4f}".format(k, float(v)) for k, v in losses.items()
+    def print_step(self, losses=""):
+        losses_str = (
+            " | ".join("{}: {:.4f}".format(k, float(v)) for k, v in losses.items())
+            if losses
+            else ""
         )
         print(
             "Step {:<5}: Batch {:<3} Epoch {:<5}".format(

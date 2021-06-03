@@ -4,6 +4,7 @@ from koop.dataloading import create_dataloaders
 from koop.logger import Logger
 from koop.losses import Loss
 from koop.model import DeepKoopman
+from koop.utils import make_output_dir
 
 
 class Trainer:
@@ -15,6 +16,10 @@ class Trainer:
             self.opts["data"], self.opts["sequence_length"], self.opts["batch_size"]
         )
         self.opts.input_dim = self.dataloaders["train"].dataset.input_dim
+
+        self.opts.output_path = make_output_dir(
+            self.opts.output_path, dev=self.opts.get("dev")
+        )
 
         self.model = DeepKoopman(self.opts)
         self.losses = Loss(self.opts)

@@ -1,3 +1,5 @@
+import uuid
+from os.path import expandvars
 from pathlib import Path
 
 import torch.nn.init as init
@@ -10,8 +12,12 @@ class Opts(Dict):
         raise KeyError(key)
 
 
+def resolve(path):
+    return Path(expandvars(str(path))).expanduser().resolve()
+
+
 def load_opts(path="./config/opts.yaml", task="discrete"):
-    p = Path(path).expanduser().resolve()
+    p = resolve(path)
     print("Loading parameters from {}".format(str(p)))
     with p.open("r") as f:
         all_params = safe_load(f)
@@ -27,6 +33,18 @@ def load_opts(path="./config/opts.yaml", task="discrete"):
             params[key] = value
 
     return Opts(params)
+
+
+def make_output_dir(path, dev=False):
+    path = resolve(path)
+    while path.exists():
+        path = path.parent / (path.name + "-" + str(uuid.uuid4()).split("-")[0])
+    if not dev:
+        path.mkdir(exist_ok=False, parents=True)
+    else:
+        print("Dev mode: output directory is not created")
+    print("Using output directory:", str(path))
+    return str(path)
 
 
 def init_weights(m, w_dist, b_dist, scale):
