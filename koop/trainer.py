@@ -14,7 +14,7 @@ class Trainer:
 
     @classmethod
     def debug_trainer(cls, path="./config/opts.yaml", task="discrete"):
-        opts = load_opts()
+        opts = load_opts(path, task)
         trainer = cls(opts)
         trainer.setup()
         return trainer
