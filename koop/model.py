@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from torch._C import device
 import torch.nn as nn
 
 

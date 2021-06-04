@@ -3,8 +3,8 @@ from pathlib import Path
 
 import torch
 from addict import Dict
-from yaml import safe_load
 from funkybob import RandomNameGenerator
+from yaml import safe_load
 
 
 class Opts(Dict):

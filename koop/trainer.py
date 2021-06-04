@@ -4,7 +4,7 @@ from koop.dataloading import create_dataloaders
 from koop.logger import Logger
 from koop.losses import Loss
 from koop.model import DeepKoopman
-from koop.utils import make_output_dir, get_optimizer, load_opts
+from koop.utils import get_optimizer, load_opts, make_output_dir
 
 
 class Trainer:
