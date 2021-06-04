@@ -41,9 +41,35 @@ True
 KeyError: 'losses'
 ```
 
-## Run
+### opts.yaml
 
-Try with dummy data (for now!)
+The `opts` keys can be specified:
+
+* per task
+
+    ```yaml
+    param:
+      task: value
+    ```
+
+* for all tasks
+  * if it's a simple value:
+
+    ```yaml
+    param: value
+    ```
+
+  * if it's a dict:
+
+    ```yaml
+    param:
+        all:
+        key1: value1
+        key2: value2
+        ...
+    ```
+
+## Run
 
 ```bash
 # using minydra all options can be overwritten from the command-line
