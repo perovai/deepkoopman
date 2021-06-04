@@ -5,7 +5,9 @@ from koop.utils import Opts, load_opts
 
 if __name__ == "__main__":
 
-    args = minydra.Parser().args
+    parser = minydra.Parser()
+    args = parser.args.resolve()
+
     if args:
         args.pretty_print()
     args = Opts(args)

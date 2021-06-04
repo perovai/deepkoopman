@@ -20,10 +20,10 @@ class Trainer:
         return trainer
 
     def setup(self):
-        self.dataloaders = create_dataloaders(
+        self.loaders = create_dataloaders(
             self.opts["data"], self.opts["sequence_length"], self.opts["batch_size"]
         )
-        self.opts.input_dim = self.dataloaders["train"].dataset.input_dim
+        self.opts.input_dim = self.loaders["train"].dataset.input_dim
 
         self.opts.output_path = make_output_dir(
             self.opts.output_path, dev=self.opts.get("dev")
@@ -38,20 +38,25 @@ class Trainer:
 
         self.model = DeepKoopman(self.opts).to(self.device)
         self.losses = Loss(self.opts)
-        self.logger = Logger(self.opts)
+        self.logger = Logger(
+            self.opts,
+            n_train=len(self.loaders["train"]),
+            n_val=len(self.loaders["val"]),
+            n_test=len(self.loaders["test"]),
+        )
         self.optimizer, self.scheduler = get_optimizer(self.opts, self.model)
 
         self.is_setup = True
 
     def dev_batch(self, mode="train"):
         assert self.is_setup
-        return next(iter(self.dataloaders[mode])).to(self.device)
+        return next(iter(self.loaders[mode])).to(self.device)
 
     def run_step(self, batch):
         self.optimizer.zero_grad()
 
         state = batch[:, 0, :]
-        predictions = self.model(state)
+        predictions = self.model.forward(state)
 
         train_losses = self.losses.compute(batch, predictions, self.model)
         train_losses["total"].backward()
@@ -63,7 +68,7 @@ class Trainer:
 
     def run_epoch(self):
         self.model.train()
-        for self.logger.batch_id, batch in enumerate(self.dataloaders["train"]):
+        for self.logger.batch_id, batch in enumerate(self.loaders["train"]):
             batch = batch.to(self.device)
             self.run_step(batch)
 

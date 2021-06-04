@@ -1,5 +1,4 @@
 import torch
-from torch._C import device
 
 
 def get_reconstruction_loss(reconstruction, state):
@@ -36,7 +35,7 @@ class Loss:
         state = targets[:, 0, ...]
         sequence = targets[:, 1:, ...]
 
-        losses = {"total": torch.tensor(0.0, requires_grad=True, device=state.device)}
+        losses = {"total": 0.0}
 
         if self.reconstruction:
             losses["reconstruction"] = self.reconstruction(reconstruction, state)
