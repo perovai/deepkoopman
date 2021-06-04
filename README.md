@@ -47,7 +47,17 @@ Try with dummy data (for now!)
 
 ```bash
 # using minydra all options can be overwritten from the command-line
-(dkenv) $ python train.py task=discrete dev=true epochs=1
+(dkenv) $ python train.py task=discrete epochs=1
+```
+
+```python
+# dev mode: quickly getting a trainer and a batch
+from koop.trainer import Trainer
+
+trainer = Trainer.debug_trainer()
+batch = trainer.dev_batch()
+
+outputs = trainer.model(batch)
 ```
 
 ## Misc

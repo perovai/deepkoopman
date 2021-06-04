@@ -32,6 +32,18 @@ losses:
   discrete:
     reconstruction: true
     koopman: false
+    prediction: true
+
+weights:
+  discrete:
+    reconstruction: 1
+    koopman: 1
+    prediction: 1
 
 epochs: 4
 output_path: ./runs/v0
+optimizer:
+  all:
+    name: adam
+    lr: 0.001
+    scheduler: plateau
