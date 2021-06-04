@@ -3,6 +3,8 @@ class Logger:
         self.opts = opts
         self.exp = exp
         self.global_step = 0
+        self.batch_id = 0
+        self.epoch_id = 0
 
     def print_step(self, losses=""):
         losses_str = (
