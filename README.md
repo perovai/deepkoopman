@@ -63,7 +63,7 @@ The `opts` keys can be specified:
 
     ```yaml
     param:
-        all:
+      all:
         key1: value1
         key2: value2
         ...
