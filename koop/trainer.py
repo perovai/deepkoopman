@@ -1,12 +1,21 @@
+import numpy as np
 import torch
 from tqdm import tqdm
-import numpy as np
-
+from comet_ml import Experiment, ExistingExperiment
 from koop.dataloading import create_dataloaders
 from koop.logger import Logger
 from koop.losses import Loss
 from koop.model import DeepKoopman
-from koop.utils import get_optimizer, load_opts, make_output_dir, mem_size, num_params
+from koop.opts import Opts
+from koop.utils import (
+    get_optimizer,
+    load_opts,
+    mem_size,
+    num_params,
+    resolve,
+    comet_kwargs,
+    find_existing_comet_id,
+)
 
 
 class Trainer:
@@ -14,6 +23,34 @@ class Trainer:
         self.opts = opts
         self.is_setup = False
         self.exp = exp
+
+    @classmethod
+    def resume_from_path(cls, path, overrides=None, exp_type="resume"):
+        path = resolve(path)
+        opts_path = path / "opts.yaml"
+        assert opts_path.exists()
+        opts = load_opts(opts_path)
+        if isinstance(overrides, (Opts, dict)):
+            opts.update(overrides)
+
+        if exp_type == "new":
+            exp = Experiment(
+                workspace=opts.comet.workspace,
+                project_name=opts.comet.project_name,
+                **comet_kwargs,
+            )
+        elif exp_type == "resume":
+            comet_previous_id = find_existing_comet_id(path)
+            exp = ExistingExperiment(
+                previous_experiment=comet_previous_id, **comet_kwargs
+            )
+        else:
+            exp = None
+
+        trainer = cls(opts, exp)
+        trainer.setup()
+
+        return trainer
 
     @classmethod
     def debug_trainer(cls, path="./config/opts.yaml", task="discrete"):

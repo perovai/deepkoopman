@@ -3,7 +3,13 @@ from comet_ml import Experiment
 
 from koop.opts import Opts
 from koop.trainer import Trainer
-from koop.utils import load_opts, make_output_dir, upload_code, comet_kwargs
+from koop.utils import (
+    comet_kwargs,
+    load_opts,
+    make_output_dir,
+    save_config,
+    upload_code,
+)
 
 exp = None
 
@@ -20,7 +26,6 @@ if __name__ == "__main__":
         args.get("yaml", "./config/opts.yaml"), args.get("task", "discrete")
     )
     opts.update(args)
-
     opts.output_path = make_output_dir(opts.output_path, dev=opts.get("dev"))
 
     if opts.comet.use:
@@ -31,6 +36,8 @@ if __name__ == "__main__":
         )
         exp.set_name(opts.output_path.name)
         upload_code(exp)
+
+    save_config(opts, exp)
 
     trainer = Trainer(opts, exp)
     trainer.setup()

@@ -1,6 +1,7 @@
+from datetime import datetime
 from queue import deque
 from time import time
-from datetime import datetime
+
 import numpy as np
 from comet_ml import Experiment
 

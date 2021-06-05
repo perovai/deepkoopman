@@ -1,8 +1,9 @@
 from os.path import expandvars
 from pathlib import Path
-from comet_ml import Experiment
 
 import torch
+import yaml
+from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
 
@@ -56,7 +57,7 @@ def resolve(path):
     return Path(expandvars(str(path))).expanduser().resolve()
 
 
-def load_opts(path="./config/opts.yaml", task="discrete"):
+def load_opts(path="./config/opts.yaml", task=None):
     """
     Load opts from a yaml config for a specific task
 
@@ -67,6 +68,13 @@ def load_opts(path="./config/opts.yaml", task="discrete"):
     print("Loading parameters from {}".format(str(p)))
     with p.open("r") as f:
         all_params = safe_load(f)
+
+    if task is None:
+        if "task" not in all_params:
+            raise ValueError("No task provided or in the opts yaml file")
+        task = all_params["task"]
+    else:
+        all_params["task"] = task
 
     params = {}
     for key, value in all_params.items():
@@ -171,3 +179,28 @@ def upload_code(exp: Experiment):
     py_files += list(Path(__file__).resolve().parent.parent.glob("./koop/*.py"))
     for py in py_files:
         exp.log_asset(str(py), file_name=f"{py.parent.name}/{py.name}")
+
+
+def save_config(opts, exp):
+    if opts.get("dev"):
+        print("Dev mode : config not saved to disk")
+        return
+    output_path = opts.output_path
+    to_save = opts.to_dict()
+    to_save["output_path"] = str(to_save["output_path"])
+    with open(output_path / "opts.yaml", "w") as f:
+        yaml.safe_dump(to_save, f)
+
+    if exp is not None:
+        with open(output_path / "comet_url.txt", "w") as f:
+            f.write(exp.url)
+
+
+def find_existing_comet_id(path):
+    comet_file = path / "comet_url.txt"
+    assert comet_file.exists()
+
+    with comet_file.open("r") as f:
+        comet_url = f.read().strip()
+
+    return comet_url.split("/")[-1]
