@@ -1,4 +1,6 @@
 import torch
+from tqdm import tqdm
+import numpy as np
 
 from koop.dataloading import create_dataloaders
 from koop.logger import Logger
@@ -8,9 +10,10 @@ from koop.utils import get_optimizer, load_opts, make_output_dir, mem_size, num_
 
 
 class Trainer:
-    def __init__(self, opts) -> None:
+    def __init__(self, opts, exp=None) -> None:
         self.opts = opts
         self.is_setup = False
+        self.exp = exp
 
     @classmethod
     def debug_trainer(cls, path="./config/opts.yaml", task="discrete"):
@@ -34,17 +37,20 @@ class Trainer:
         having it as a separate function allows for intermediate debugging manipulations
         """
         # Create data loaders
+        lims = {
+            f"{mode}_lim": self.opts.get("limit", {}).get(mode, -1)
+            for mode in ["train", "val", "test"]
+        }
         self.loaders = create_dataloaders(
-            self.opts["data"], self.opts["sequence_length"], self.opts["batch_size"]
+            self.opts.data_folder,
+            self.opts.sequence_length,
+            self.opts.batch_size,
+            self.opts.workers,
+            **lims,
         )
 
         # set input dim based on data formatting
         self.opts.input_dim = self.loaders["train"].dataset.input_dim
-
-        # create unique output path IFF not in dev mode
-        self.opts.output_path = make_output_dir(
-            self.opts.output_path, dev=self.opts.get("dev")
-        )
 
         # find device
         if torch.cuda.is_available():
@@ -65,6 +71,7 @@ class Trainer:
         # create logger to abstract prints away from the main code
         self.logger = Logger(
             self.opts,
+            self.exp,
             n_train=len(self.loaders["train"]),
             n_val=len(self.loaders["val"]),
             n_test=len(self.loaders["test"]),
@@ -101,7 +108,7 @@ class Trainer:
         self.optimizer.step()
 
         self.logger.global_step += 1
-        self.logger.print_step(train_losses)
+        self.logger.log_step(train_losses)
 
     def run_epoch(self):
         """
@@ -137,8 +144,20 @@ class Trainer:
             float: validation loss
         """
         self.model.eval()
-        val_loss = torch.tensor(0.0)
-        return val_loss
+        losses = None
+        print()
+        for batch in tqdm(self.loaders["val"]):
+            state = batch[:, 0, :]
+            predictions = self.model.forward(state)
+            val_losses = self.losses.compute(batch, predictions, self.model)
+            if losses is None:
+                losses = {k: [] for k in val_losses}
+            for k, v in val_losses.items():
+                losses[k].append(v)
+        losses = {k: np.mean(v) for k, v in losses.items()}
+        self.logger.log_step(losses, mode="val")
+        print()
+        return losses["total"]
 
     def save(self):
         return  # todo: add output_path, save_every

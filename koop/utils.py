@@ -1,11 +1,20 @@
 from os.path import expandvars
 from pathlib import Path
+from comet_ml import Experiment
 
 import torch
 from funkybob import RandomNameGenerator
 from yaml import safe_load
 
 from koop.opts import Opts
+
+comet_kwargs = {
+    "auto_metric_logging": False,
+    "parse_args": True,
+    "log_env_gpu": True,
+    "log_env_cpu": True,
+    "display_summary_level": 0,
+}
 
 
 def mem_size(model):
@@ -72,28 +81,62 @@ def load_opts(path="./config/opts.yaml", task="discrete"):
     return Opts(params)
 
 
+def new_unique_path(path):
+    """
+    generates a new path from the input one by adding a random
+    `adjective-noun` suffix.
+
+    eg:
+
+    new_unique_path("~/hello.txt")
+        -> /Users/victor/hello.txt if it does not already exist
+        -> /Users/victor/hello-gifted-boyed.txt if it does
+
+    Works similarly for dirs
+
+    Args:
+        path (pathlike): path to get uniquely modified if it exists
+
+    Returns:
+        pathlib.Path: new non-existing path based on the input's path name and parent
+    """
+    path = resolve(path)
+    if not path.exists():
+        return path
+
+    stem = path.stem
+    suffix = path.suffix
+
+    funky_gen = iter(RandomNameGenerator(members=2, separator="-"))
+
+    while path.exists():
+        funky = next(funky_gen)
+        path = path.parent / (stem + "-" + funky + suffix)
+
+    return path
+
+
 def make_output_dir(path, dev=False):
     """
     Create output dir with the path's name.
     If it exists, will append random `-adjective-name`
-    suffix to make it identifiable
+    suffix to make it uniquely identifiable
 
     mkdir will not be called if `dev` is True
 
     Returns:
         pathlib.Path: path to a unique empty dir
     """
-    path = resolve(path)
-    funky_gen = iter(RandomNameGenerator(members=2, separator="-"))
-    while path.exists():
-        funky = next(funky_gen)
-        path = path.parent / (path.name + "-" + funky)
+    path = new_unique_path(path)
+
     if not dev:
         path.mkdir(exist_ok=False, parents=True)
     else:
         print("Dev mode: output directory is not created")
+
     print("Using output directory:", str(path))
-    return str(path)
+
+    return path
 
 
 def get_optimizer(opts, model):
@@ -119,3 +162,12 @@ def get_optimizer(opts, model):
         scheduler = None
 
     return optimizer, scheduler
+
+
+def upload_code(exp: Experiment):
+    py_files = []
+    py_files += list(Path(__file__).resolve().parent.parent.glob("./*.py"))
+    py_files += list(Path(__file__).resolve().parent.parent.glob("./scripts/*.py"))
+    py_files += list(Path(__file__).resolve().parent.parent.glob("./koop/*.py"))
+    for py in py_files:
+        exp.log_asset(str(py), file_name=f"{py.parent.name}/{py.name}")

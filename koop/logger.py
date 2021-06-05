@@ -2,12 +2,13 @@ from queue import deque
 from time import time
 from datetime import datetime
 import numpy as np
+from comet_ml import Experiment
 
 
 class Logger:
     def __init__(self, opts=None, exp=None, n_train=None, n_val=None, n_test=None):
         self.opts = opts
-        self.exp = exp
+        self.exp: Experiment = exp
         self.n_train = n_train
         self.n_val = n_val
         self.n_test = n_test
@@ -33,7 +34,7 @@ class Logger:
     def now(self):
         return str(datetime.now()).split(".")[0].split()[-1]
 
-    def print_step(self, losses="", mode="train"):
+    def log_step(self, losses="", mode="train", upload=True):
         if mode == "train":
             n = self.n_train
         elif mode == "val":
@@ -47,23 +48,31 @@ class Logger:
         diff = nt - self.ts[mode]
         self.ts[mode] = nt
         self.qs[mode].append(diff)
-        t = f"{np.mean(self.qs[mode]): .2f}s/b"
+        batch_time = np.mean(self.qs[mode])
+        t = f"{batch_time: .2f}s/b"
 
         losses_str = (
             " | ".join("{}: {:.5f}".format(k, float(v)) for k, v in losses.items())
             if losses
             else ""
         )
-        print(
-            "[{} {}] {:>5} {:>3}/{} {:>3}/{} | ".format(
-                now,
-                t,
+        if mode == "train":
+            current_state = "{:>5} {:>3}/{} {:>3}/{}".format(
                 self.global_step,
                 self.batch_id + 1,
                 n,
                 self.epoch_id + 1,
                 self.n_epochs,
             )
-            + losses_str,
+        else:
+            current_state = f"<> {mode} <>"
+        print(
+            "[{} {}] {} | {}".format(now, t, current_state, losses_str),
             end="\r",
         )
+        if upload and self.exp is not None:
+            self.exp.log_metrics(
+                {f"{mode}_{k}": v for k, v in losses.items()}, step=self.global_step
+            )
+            if mode == "train":
+                self.exp.log_metric("batch_time", batch_time)

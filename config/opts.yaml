@@ -1,37 +1,82 @@
+---
 # HOW TO USE:
 # 1/  parameter: value will be used for all tasks
 #
 # 2/  parameter:
 #       task: value will be used for a specific task only
 
-data:
+# ------------------
+# -----  DATA  -----
+# ------------------
+
+data_folder:
   discrete: ./datasets/DiscreteSpectrumExample
+  pendulum: ./datasets/Pendulum
+  fluidbox: ./datasets/FluidFlowBox
+  attractor: ./datasets/FluidFlowOnAttractor
 
 sequence_length:
   discrete: 51
+  pendulum: 51
+  fluidbox: 101
+  attractor: 121
 
-batch_size:
-  discrete: 8
+limit: # limit the number of samples loaded ; <=0 means no limit
+  all:
+    train: -1
+    val: -1
+    test: -1
+
+# -------------------
+# -----  MODEL  -----
+# -------------------
 
 hidden_layers:
   discrete: 2
+  pendulum: 2
+  attractor: 2
+  fluidbox: 2
 
 hidden_dim:
   discrete: 128
+  pendulum: 128
+  fluidbox: 128
+  attractor: 128
 
 hidden_layers_aux:
   discrete: 1
+  pendulum: 1
+  fluidbox: 1
+  attractor: 1
 
 hidden_dim_aux:
   discrete: 64
+  pendulum: 64
+  fluidbox: 64
+  attractor: 64
 
 latent_dim:
   discrete: 3
+  pendulum: 3
+  fluidbox: 3
+  attractor: 3
 
 losses:
   discrete:
     reconstruction: true
-    koopman: false
+    koopman: true
+    prediction: true
+  pendulum:
+    reconstruction: true
+    koopman: true
+    prediction: true
+  fluidbox:
+    reconstruction: true
+    koopman: true
+    prediction: true
+  attractor:
+    reconstruction: true
+    koopman: true
     prediction: true
 
 weights:
@@ -39,11 +84,38 @@ weights:
     reconstruction: 1
     koopman: 1
     prediction: 1
+  pendulum:
+    reconstruction: 1
+    koopman: 1
+    prediction: 1
+  fluidbox:
+    reconstruction: 1
+    koopman: 1
+    prediction: 1
+  attractor:
+    reconstruction: 1
+    koopman: 1
+    prediction: 1
+
+# ----------------------
+# -----  TRAINING  -----
+# ----------------------
+
+output_path: ./runs/v0
+
+batch_size: 128
+workers: 4
 
 epochs: 4
-output_path: ./runs/v0
+
 optimizer:
   all:
     name: adam
     lr: 0.001
     scheduler: plateau
+
+comet:
+  all:
+    use: true
+    project_name: aiphysim
+    workspace: vict0rsch
