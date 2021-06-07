@@ -182,7 +182,9 @@ def upload_code_and_parameters(exp: Experiment, opts: Opts):
         exp.log_asset(str(py), file_name=f"{py.parent.name}/{py.name}")
 
     # parameters
-    exp.log_parameters(opts, prefix="opts")
+    opts_dict = opts.to_dict()
+    opts_dict["output_path"] = str(opts_dict["output_path"])
+    exp.log_parameters(opts_dict, prefix="opts")
 
 
 def save_config(opts, exp):
