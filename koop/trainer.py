@@ -1,21 +1,22 @@
 import numpy as np
 import torch
+from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
-from comet_ml import Experiment, ExistingExperiment
+
 from koop.dataloading import create_dataloaders
+from koop.eval import plot_2D_comparative_trajectories
 from koop.logger import Logger
 from koop.losses import Loss
 from koop.model import DeepKoopman
 from koop.opts import Opts
-from koop.eval import plot_2D_comparative_trajectories
 from koop.utils import (
+    comet_kwargs,
+    find_existing_comet_id,
     get_optimizer,
     load_opts,
     mem_size,
     num_params,
     resolve,
-    comet_kwargs,
-    find_existing_comet_id,
 )
 
 

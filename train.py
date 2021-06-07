@@ -1,4 +1,3 @@
-import os
 import minydra
 from comet_ml import Experiment
 

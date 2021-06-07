@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from koop.utils import new_unique_path
+from koop.utils import new_unique_path  # noqa: E402
 
 if __name__ == "__main__":
 
