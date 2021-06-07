@@ -1,3 +1,4 @@
+import os
 import minydra
 from comet_ml import Experiment
 
@@ -30,6 +31,7 @@ if __name__ == "__main__":
 
     if opts.comet.use:
         exp = Experiment(
+            api_key=os.environ.get('COMET_API_KEY', None),
             workspace=opts.comet.workspace,
             project_name=opts.comet.project_name,
             **comet_kwargs
