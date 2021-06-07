@@ -216,14 +216,14 @@ class Trainer:
         losses = None
         print()
         for batch in tqdm(self.loaders["val"]):
-            state = batch[:, 0, :]
+            state = batch[:, 0, :].to(self.device)
             predictions = self.model.forward(state)
             val_losses = self.losses.compute(batch, predictions, self.model)
             if losses is None:
                 losses = {k: [] for k in val_losses}
             for k, v in val_losses.items():
                 losses[k].append(v)
-        losses = {k: np.mean(v) for k, v in losses.items()}
+        losses = {k: np.mean([lv.cpu().item() for lv in v]) for k, v in losses.items()}
         self.logger.log_step(losses, mode="val")
         print()
         return losses["total"]
