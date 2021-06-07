@@ -216,7 +216,8 @@ class Trainer:
         losses = None
         print()
         for batch in tqdm(self.loaders["val"]):
-            state = batch[:, 0, :].to(self.device)
+            batch = batch.to(self.device)
+            state = batch[:, 0, :]
             predictions = self.model.forward(state)
             val_losses = self.losses.compute(batch, predictions, self.model)
             if losses is None:
