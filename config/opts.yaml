@@ -107,6 +107,7 @@ batch_size: 128
 workers: 4
 
 epochs: 4
+save_every: 5
 
 optimizer:
   all:
@@ -119,3 +120,13 @@ comet:
     use: true
     project_name: aiphysim
     workspace: vict0rsch
+
+# ------------------------
+# -----  EVALUATION  -----
+# ------------------------
+
+val_trajectories:
+  all:
+    n: 20 # number of validation trajectories to plot
+    length: -1 # validation trajectory length ; <0 => seq. len.
+    n_per_plot: 10
