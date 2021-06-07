@@ -10,6 +10,12 @@ Installing (assumes Python 3.9.2)
 # create virtual env
 $ python -m venv dkenv
 
+# activate the environment
+source dkenv/bin/activate
+
+# updgrade pip
+pip install --upgrade pip
+
 # install dependencies
 $ pip install -r requirements-3.9.2.txt
 
@@ -71,9 +77,11 @@ The `opts` keys can be specified:
     ```
 
 ## Run
+Note1: It expects csv files to be stored in `datasets/DiscreteSpectrumExample` folder.
+Note2: It expects an environment variable COMET_API_KEY to log data to [comet.ml](https://comet.ml). If you do not want to log porgress to `comet`, then pass the argument `comet.use=False` in the command line.
 
 ```bash
-# using minydra all options can be overwritten from the command-line
+# using minydra, all options can be overwritten from the command-line
 (dkenv) $ python train.py task=discrete epochs=1
 ```
 
