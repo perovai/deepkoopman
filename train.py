@@ -8,7 +8,7 @@ from koop.utils import (
     load_opts,
     make_output_dir,
     save_config,
-    upload_code,
+    upload_code_and_parameters,
 )
 
 exp = None
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             **comet_kwargs
         )
         exp.set_name(opts.output_path.name)
-        upload_code(exp)
+        upload_code_and_parameters(exp, opts)
 
     save_config(opts, exp)
 
