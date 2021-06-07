@@ -172,13 +172,17 @@ def get_optimizer(opts, model):
     return optimizer, scheduler
 
 
-def upload_code(exp: Experiment):
+def upload_code_and_parameters(exp: Experiment, opts: Opts):
+    # code
     py_files = []
     py_files += list(Path(__file__).resolve().parent.parent.glob("./*.py"))
     py_files += list(Path(__file__).resolve().parent.parent.glob("./scripts/*.py"))
     py_files += list(Path(__file__).resolve().parent.parent.glob("./koop/*.py"))
     for py in py_files:
         exp.log_asset(str(py), file_name=f"{py.parent.name}/{py.name}")
+
+    # parameters
+    exp.log_parameters(opts, prefix="opts")
 
 
 def save_config(opts, exp):
