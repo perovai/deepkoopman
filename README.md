@@ -77,8 +77,10 @@ The `opts` keys can be specified:
     ```
 
 ## Run
+
 Note1: It expects csv files to be stored in `datasets/DiscreteSpectrumExample` folder.
-Note2: It expects an environment variable COMET_API_KEY to log data to [comet.ml](https://comet.ml). If you do not want to log porgress to `comet`, then pass the argument `comet.use=False` in the command line.
+
+Note2: To log data to [comet.ml](https://comet.ml) checkout <https://www.comet.ml/docs/python-sdk/advanced/#non-interactive-setup> for instructions on how to setup your comet_ml API key: either in `~/.comet.config` or as an environment variable COMET_API_KEY. If you do not want to log progress to `comet`, then pass the argument `comet.use=False` in the command line.
 
 ```bash
 # using minydra, all options can be overwritten from the command-line
