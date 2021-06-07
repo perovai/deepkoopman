@@ -139,6 +139,29 @@ class DeepKoopman(nn.Module):
         embedding = self.encoder(inputs)
         koopman_operator = self.auxiliary(embedding)
         next_embedding = (koopman_operator @ embedding.unsqueeze(2)).squeeze()
-        next_state = self.decoder(next_embedding)
+        next_state = self.decoder.forward(next_embedding)
 
         return next_state
+
+    def infer_trajectory(
+        self, initial_state, n_steps=None, return_intermediate_states=True
+    ):
+        if n_steps is None:
+            n_steps = self.num_timesteps
+
+        intermediate_states = []
+
+        embedding = self.encoder.forward(initial_state)
+        for _ in range(n_steps):
+            koopman_operator = self.auxiliary.forward(embedding)
+            next_embedding = (koopman_operator @ embedding.unsqueeze(2)).squeeze()
+            if return_intermediate_states:
+                next_state = self.decoder.forward(next_embedding)
+                intermediate_states.append(next_state)
+            embedding = next_embedding
+        final_state = self.decoder.forward(embedding)
+
+        if return_intermediate_states:
+            return final_state, intermediate_states
+
+        return final_state

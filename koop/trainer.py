@@ -7,6 +7,7 @@ from koop.logger import Logger
 from koop.losses import Loss
 from koop.model import DeepKoopman
 from koop.opts import Opts
+from koop.eval import plot_2D_comparative_trajectories
 from koop.utils import (
     get_optimizer,
     load_opts,
@@ -27,6 +28,13 @@ class Trainer:
     @classmethod
     def resume_from_path(cls, path, overrides=None, exp_type="resume"):
         path = resolve(path)
+
+        ckpt = "latest.ckpt"
+        if path.is_file():
+            assert path.suffix == ".ckpt"
+            ckpt = path.name
+            path = path.parent
+
         opts_path = path / "opts.yaml"
         assert opts_path.exists()
         opts = load_opts(opts_path)
@@ -49,6 +57,10 @@ class Trainer:
 
         trainer = cls(opts, exp)
         trainer.setup()
+
+        if ckpt is not None and (path / ckpt).exists():
+            print("Loading checkpoint :", str(path / ckpt))
+            trainer.load(path / ckpt)
 
         return trainer
 
@@ -164,13 +176,33 @@ class Trainer:
         """
         assert self.is_setup
         print("\n>>> Starting training")
-        for self.logger.epoch_id in range(self.opts.epochs):
+        epochs = range(self.logger.epoch_id, self.logger.epoch_id + self.opts.epochs)
+
+        for self.logger.epoch_id in epochs:
             self.run_epoch()
             val_loss = self.run_evaluation()
             if self.scheduler is not None:
                 self.scheduler.step(val_loss)
-            self.save()
+            self.save()  # save latest
+            self.save(self.logger.epoch_id)  # save intermediate checkpoint
             print()
+        if self.opts.input_dim == 2:
+            val_trajs_len = (
+                self.opts.val_trajectories.length
+                if self.opts.val_trajectories.length > 0
+                else self.opts.sequence_length
+            )
+            batch = next(iter(self.loaders["val"]))
+            batch = batch[: self.opts.val_trajectories.n]
+
+            plot_2D_comparative_trajectories(
+                self.model,
+                batch,
+                val_trajs_len,
+                self.opts.val_trajectories.n_per_plot,
+                self.exp,
+                self.opts.output_path / "final_traj_plot.png",
+            )
 
     @torch.no_grad()
     def run_evaluation(self):
@@ -196,13 +228,33 @@ class Trainer:
         print()
         return losses["total"]
 
-    def save(self):
-        return  # todo: add output_path, save_every
-        if self.logger.epoch_id % self.opts.save_every:
-            torch.save(
-                {
-                    "model": self.model,
-                    "optimizer": self.optimizer,
-                },
-                self.opts["output_path"],
-            )
+    def save(self, epoch=-1):
+        # don't save if epoch is provided and it's not the right time
+        if epoch > 0 and self.logger.epoch_id % self.opts.save_every != 0:
+            return
+
+        # if epoch is not provided just save as "latest.ckpt"
+        if epoch < 0:
+            name = "latest.ckpt"
+        else:
+            name = "epoch_{}.ckpt".format(str(epoch).zfill(3))
+
+        torch.save(
+            {
+                "model": self.model,
+                "optimizer": self.optimizer,
+                "scheduler": self.scheduler,
+                "global_step": self.logger.global_step,
+                "epoch_id": self.logger.epoch_id,
+            },
+            str(self.opts.output_path / name),
+        )
+
+    def load(self, path):
+        path = resolve(path)
+        state_dict = torch.load(str(path))
+        self.logger.global_step = state_dict["global_step"]
+        self.logger.epoch_id = state_dict["epoch_id"]
+        self.model.load_state_dict(state_dict["model"])
+        self.optimizer.load_state_dict(state_dict["optimizer"])
+        self.scheduler.load_state_dict(state_dict["scheduler"])
