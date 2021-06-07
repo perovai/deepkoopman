@@ -3,6 +3,7 @@ from pathlib import Path
 
 import torch
 import yaml
+from addict import Dict
 from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
@@ -182,7 +183,7 @@ def upload_code_and_parameters(exp: Experiment, opts: Opts):
         exp.log_asset(str(py), file_name=f"{py.parent.name}/{py.name}")
 
     # parameters
-    opts_dict = opts.to_dict()
+    opts_dict = flatten_opts(opts)
     opts_dict["output_path"] = str(opts_dict["output_path"])
     exp.log_parameters(opts_dict, prefix="opts")
 
@@ -210,3 +211,48 @@ def find_existing_comet_id(path):
         comet_url = f.read().strip()
 
     return comet_url.split("/")[-1]
+
+
+def flatten_opts(opts: Dict) -> dict:
+    """Flattens a multi-level addict.Dict or native dictionnary into a single
+    level native dict with string keys representing the keys sequence to reach
+    a value in the original argument.
+
+    d = addict.Dict()
+    d.a.b.c = 2
+    d.a.b.d = 3
+    d.a.e = 4
+    d.f = 5
+    flatten_opts(d)
+    >>> {
+        "a.b.c": 2,
+        "a.b.d": 3,
+        "a.e": 4,
+        "f": 5,
+    }
+
+    Args:
+        opts (addict.Dict or dict): addict dictionnary to flatten
+
+    Returns:
+        dict: flattened dictionnary
+    """
+    values_list = []
+
+    def p(d, prefix="", vals=[]):
+        for k, v in d.items():
+            if isinstance(v, (Dict, dict)):
+                p(v, prefix + k + ".", vals)
+            elif isinstance(v, list):
+                if v and isinstance(v[0], (Dict, dict)):
+                    for i, m in enumerate(v):
+                        p(m, prefix + k + "." + str(i) + ".", vals)
+                else:
+                    vals.append((prefix + k, str(v)))
+            else:
+                if isinstance(v, Path):
+                    v = str(v)
+                vals.append((prefix + k, v))
+
+    p(opts, vals=values_list)
+    return dict(values_list)
