@@ -42,3 +42,4 @@ if __name__ == "__main__":
     trainer = Trainer(opts, exp)
     trainer.setup()
     trainer.train()
+    print("\n >>>> Done training model in", str(opts.output_path))
