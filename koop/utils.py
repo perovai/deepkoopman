@@ -239,7 +239,9 @@ def flatten_opts(opts: Dict) -> dict:
     """
     values_list = []
 
-    def p(d, prefix="", vals=[]):
+    def p(d, prefix="", vals=None):
+        if vals is None:
+            vals = []
         for k, v in d.items():
             if isinstance(v, (Dict, dict)):
                 p(v, prefix + k + ".", vals)
