@@ -1,6 +1,6 @@
 from os.path import expandvars
 from pathlib import Path
-
+import os
 import torch
 import yaml
 from addict import Dict
@@ -258,3 +258,15 @@ def flatten_opts(opts: Dict) -> dict:
 
     p(opts, vals=values_list)
     return dict(values_list)
+
+
+def clean_checkpoints(path, n_max=5):
+    path = resolve(path)
+    ckpts = list(path.glob("*.ckpt"))
+    ckpts = [c for c in ckpts if "latest" not in c.name]
+
+    if len(ckpts) < n_max:
+        return
+
+    sorted_ckpts = sorted(ckpts, key=lambda c: float(c.stem.split("loss_")[-1]))
+    os.remove(sorted_ckpts[-1])

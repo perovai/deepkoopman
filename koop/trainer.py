@@ -17,6 +17,7 @@ from koop.utils import (
     mem_size,
     num_params,
     resolve,
+    clean_checkpoints,
 )
 
 
@@ -277,6 +278,8 @@ class Trainer:
                 str(self.logger.epoch_id).zfill(3), loss
             )
 
+        clean_checkpoints(self.opts.output_path, n_max=5)
+
         torch.save(
             {
                 "early": {
@@ -284,11 +287,13 @@ class Trainer:
                     "score": self.early_score,
                     "counter": self.early_counter,
                 },
+                "logger": {
+                    "global_step": self.logger.global_step,
+                    "epoch_id": self.logger.epoch_id,
+                },
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
                 "scheduler_state_dict": self.scheduler.state_dict(),
-                "global_step": self.logger.global_step,
-                "epoch_id": self.logger.epoch_id,
             },
             str(self.opts.output_path / name),
         )
@@ -298,8 +303,8 @@ class Trainer:
 
         state_dict = torch.load(str(path))
 
-        self.logger.global_step = state_dict["global_step"]
-        self.logger.epoch_id = state_dict["epoch_id"]
+        self.logger.global_step = state_dict["logger"]["global_step"]
+        self.logger.epoch_id = state_dict["logger"]["epoch_id"]
 
         self.early_stop = state_dict["early"]["stop"]
         self.early_score = state_dict["early"]["score"]
