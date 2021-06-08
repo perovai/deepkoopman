@@ -26,6 +26,10 @@ class Trainer:
         self.is_setup = False
         self.exp = exp
 
+        self.early_stop = False
+        self.early_score = None
+        self.early_counter = 0
+
     @classmethod
     def resume_from_path(cls, path, overrides=None, exp_type="resume"):
         path = resolve(path)
@@ -132,6 +136,26 @@ class Trainer:
         # trainer is good to go
         self.is_setup = True
 
+    def update_early_stopping(self, val_loss):
+        score = -val_loss
+
+        if self.early_score is None:
+            self.early_score = score
+            self.save(loss=val_loss)
+        elif score < self.early_score + self.opts.early.min_delta:
+            self.early_counter += 1
+            print(
+                "\nEarlyStopping counter: {} out of {}\n".format(
+                    self.early_counter, self.patience
+                )
+            )
+            if self.counter >= self.opts.early.patience:
+                self.early_stop = True
+        else:
+            self.early_score = score
+            self.save(loss=val_loss)
+            self.early_counter = 0
+
     def dev_batch(self, mode="train"):
         """
         Utility class to quickly get a batch
@@ -180,13 +204,25 @@ class Trainer:
         epochs = range(self.logger.epoch_id, self.logger.epoch_id + self.opts.epochs)
 
         for self.logger.epoch_id in epochs:
+            # train for 1 epoch
             self.run_epoch()
+            # evaluate model
             val_loss = self.run_evaluation()
+
+            # update scheduler
             if self.scheduler is not None:
                 self.scheduler.step(val_loss)
-            self.save()  # save latest
-            self.save(self.logger.epoch_id)  # save intermediate checkpoint
+            # update early-stopping using the val_loss criterion
+            self.update_early_stopping(val_loss)  # saves if improvement
+
+            # save latest checkpoint anyway
+            self.save()
             print()
+
+            if self.early_stop:
+                print("\nEarlyStopping: Patience exceeded, stopping training\n")
+                break
+
         if self.opts.input_dim == 2:
             val_trajs_len = (
                 self.opts.val_trajectories.length
@@ -230,19 +266,23 @@ class Trainer:
         print()
         return losses["total"]
 
-    def save(self, epoch=-1):
-        # don't save if epoch is provided and it's not the right time
-        if epoch > 0 and self.logger.epoch_id % self.opts.save_every != 0:
-            return
+    def save(self, loss=None):
 
         # if epoch is not provided just save as "latest.ckpt"
-        if epoch < 0:
+        if loss is None:
             name = "latest.ckpt"
         else:
-            name = "epoch_{}.ckpt".format(str(epoch).zfill(3))
+            name = "epoch_{}_loss_{:.4f}.ckpt".format(
+                str(self.logger.epoch_id).zfill(3), loss
+            )
 
         torch.save(
             {
+                "early": {
+                    "stop": self.early_stop,
+                    "score": self.early_score,
+                    "counter": self.early_counter,
+                },
                 "model": self.model,
                 "optimizer": self.optimizer,
                 "scheduler": self.scheduler,
@@ -254,9 +294,16 @@ class Trainer:
 
     def load(self, path):
         path = resolve(path)
+
         state_dict = torch.load(str(path))
+
         self.logger.global_step = state_dict["global_step"]
         self.logger.epoch_id = state_dict["epoch_id"]
+
+        self.early_stop = state_dict["early"]["stop"]
+        self.early_score = state_dict["early"]["score"]
+        self.early_counter = state_dict["early"]["counter"]
+
         self.model.load_state_dict(state_dict["model"])
         self.optimizer.load_state_dict(state_dict["optimizer"])
         self.scheduler.load_state_dict(state_dict["scheduler"])

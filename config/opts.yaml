@@ -121,6 +121,11 @@ comet:
     project_name: aiphysim
     workspace: vict0rsch
 
+early: # early_stopping params
+  all:
+    patience: 7
+    min_delta: 0.0
+
 # ------------------------
 # -----  EVALUATION  -----
 # ------------------------
