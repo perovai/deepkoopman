@@ -137,7 +137,8 @@ class Trainer:
         Utility class to quickly get a batch
         """
         assert self.is_setup
-        return next(iter(self.loaders[mode])).to(self.device)
+        batch = next(iter(self.loaders[mode]))
+        return batch[:, 0, :].to(self.device)
 
     def run_step(self, batch):
         """
