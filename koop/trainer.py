@@ -150,7 +150,7 @@ class Trainer:
                     self.early_counter, self.opts.early.patience
                 )
             )
-            if self.counter >= self.opts.early.patience:
+            if self.early_counter >= self.opts.early.patience:
                 self.early_stop = True
         else:
             self.early_score = score
