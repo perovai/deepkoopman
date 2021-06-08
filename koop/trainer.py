@@ -10,6 +10,7 @@ from koop.losses import Loss
 from koop.model import DeepKoopman
 from koop.opts import Opts
 from koop.utils import (
+    clean_checkpoints,
     comet_kwargs,
     find_existing_comet_id,
     get_optimizer,
@@ -17,7 +18,6 @@ from koop.utils import (
     mem_size,
     num_params,
     resolve,
-    clean_checkpoints,
 )
 
 

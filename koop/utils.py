@@ -1,6 +1,7 @@
+import os
 from os.path import expandvars
 from pathlib import Path
-import os
+
 import torch
 import yaml
 from addict import Dict
