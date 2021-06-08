@@ -245,8 +245,11 @@ class Trainer:
         torch.save(
             {
                 "model": self.model,
+                "model_state_dict": self.model.state_dict(),
                 "optimizer": self.optimizer,
+                "optimizer_state_dict": self.optimizer.state_dict(),
                 "scheduler": self.scheduler,
+                "scheduler_state_dict": self.scheduler.state_dict(),
                 "global_step": self.logger.global_step,
                 "epoch_id": self.logger.epoch_id,
             },
@@ -258,6 +261,6 @@ class Trainer:
         state_dict = torch.load(str(path))
         self.logger.global_step = state_dict["global_step"]
         self.logger.epoch_id = state_dict["epoch_id"]
-        self.model.load_state_dict(state_dict["model"])
-        self.optimizer.load_state_dict(state_dict["optimizer"])
-        self.scheduler.load_state_dict(state_dict["scheduler"])
+        self.model.load_state_dict(state_dict["model_state_dict"])
+        self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
+        self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
