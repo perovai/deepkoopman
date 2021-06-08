@@ -108,7 +108,6 @@ batch_size: 128
 workers: 4
 
 epochs: 4
-save_every: 5
 
 optimizer:
   name: adam

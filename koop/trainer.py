@@ -262,8 +262,9 @@ class Trainer:
             batch = batch[: self.opts.val_trajectories.n].to(self.device)
 
             best_state = torch.load(str(self.opts.output_path / "best.ckpt"))
+            self.model.load_state_dict(best_state["model_state_dict"])
             plot_2D_comparative_trajectories(
-                self.model.load_state_dict(best_state['model_state_dict']),
+                self.model,
                 batch,
                 val_trajs_len,
                 self.opts.val_trajectories.n_per_plot,
@@ -299,10 +300,7 @@ class Trainer:
     def save(self, loss=None, name=None):
 
         # if epoch is not provided just save as "latest.ckpt"
-        if (
-            loss is None
-            and name is None
-        ):
+        if loss is None and name is None:
             name = "latest.ckpt"
         elif name is None:
             name = "epoch_{}_loss_{:.4f}.ckpt".format(
@@ -324,7 +322,7 @@ class Trainer:
                 "logger": {
                     "global_step": self.logger.global_step,
                     "epoch_id": self.logger.epoch_id,
-                    "val_loss": loss
+                    "val_loss": loss,
                 },
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
