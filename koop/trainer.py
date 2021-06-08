@@ -195,7 +195,7 @@ class Trainer:
                 else self.opts.sequence_length
             )
             batch = next(iter(self.loaders["val"]))
-            batch = batch[: self.opts.val_trajectories.n]
+            batch = batch[: self.opts.val_trajectories.n].to(self.device)
 
             plot_2D_comparative_trajectories(
                 self.model,
