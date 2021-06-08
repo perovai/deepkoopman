@@ -225,6 +225,7 @@ class Trainer:
         print("\n>>> Starting training")
         epochs = range(self.logger.epoch_id, self.logger.epoch_id + self.opts.epochs)
 
+        best_val_loss = np.inf
         for self.logger.epoch_id in epochs:
             # train for 1 epoch
             self.run_epoch()
@@ -234,6 +235,12 @@ class Trainer:
             # update scheduler
             if self.scheduler is not None:
                 self.scheduler.step(val_loss)
+
+            # save best
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                self.save(name="best.ckpt")
+
             # update early-stopping using the val_loss criterion
             self.update_early_stopping(val_loss)  # saves if improvement
 
@@ -254,8 +261,9 @@ class Trainer:
             batch = next(iter(self.loaders["val"]))
             batch = batch[: self.opts.val_trajectories.n].to(self.device)
 
+            best_state = torch.load(str(self.opts.output_path / "best.ckpt"))
             plot_2D_comparative_trajectories(
-                self.model,
+                self.model.load_state_dict(best_state['model_state_dict']),
                 batch,
                 val_trajs_len,
                 self.opts.val_trajectories.n_per_plot,
@@ -288,15 +296,21 @@ class Trainer:
         print()
         return losses["total"]
 
-    def save(self, loss=None):
+    def save(self, loss=None, name=None):
 
         # if epoch is not provided just save as "latest.ckpt"
-        if loss is None:
+        if (
+            loss is None
+            and name is None
+        ):
             name = "latest.ckpt"
-        else:
+        elif name is None:
             name = "epoch_{}_loss_{:.4f}.ckpt".format(
                 str(self.logger.epoch_id).zfill(3), loss
             )
+        else:
+            # name is given
+            pass
 
         clean_checkpoints(self.opts.output_path, n_max=5)
 
@@ -310,6 +324,7 @@ class Trainer:
                 "logger": {
                     "global_step": self.logger.global_step,
                     "epoch_id": self.logger.epoch_id,
+                    "val_loss": loss
                 },
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
