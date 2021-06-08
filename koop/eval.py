@@ -36,30 +36,39 @@ def plot_2D_comparative_trajectories(
 
     for p in range(int(plots)):
         plt.figure()
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(8, 4), dpi=300, sharex=True, sharey=True)
         for _ in range(traj_per_plot):
 
-            plt.scatter(
+            axs[0].scatter(
                 trajectories[k, :, 0],
                 trajectories[k, :, 1],
                 color=colors[k],
                 marker="o",
                 alpha=0.5,
             )
-            plt.scatter(
+            axs[0].set_title("Ground Truth")
+            axs[0].axhline(y=0)
+            axs[0].axvline(x=0)
+
+            axs[1].scatter(
                 batch[k, : (n_steps + 1), 0],
                 batch[k, : (n_steps + 1), 1],
                 color=colors[k],
                 marker="x",
                 alpha=0.5,
             )
-            # breakpoint()
+            axs[1].set_title("Predictions")
+            axs[1].axhline(y=0)
+            axs[1].axvline(x=0)
+
             k += 1
             if k >= len(batch):
                 break
-        plt.title("x -> Ground Truth | • -> Predictions")
+
         fp = fig_path.parent / (fig_path.stem + f"_{p}" + fig_path.suffix)
-        plt.savefig(fp, dpi=300)
+        fig.savefig(fp)
         if exp is not None:
             exp.log_image(fp)
+
     if exp is None and show:
         plt.show()
