@@ -161,7 +161,8 @@ class Trainer:
         Utility class to quickly get a batch
         """
         assert self.is_setup
-        return next(iter(self.loaders[mode])).to(self.device)
+        batch = next(iter(self.loaders[mode]))
+        return batch[:, 0, :].to(self.device)
 
     def run_step(self, batch):
         """
@@ -230,7 +231,7 @@ class Trainer:
                 else self.opts.sequence_length
             )
             batch = next(iter(self.loaders["val"]))
-            batch = batch[: self.opts.val_trajectories.n]
+            batch = batch[: self.opts.val_trajectories.n].to(self.device)
 
             plot_2D_comparative_trajectories(
                 self.model,
@@ -283,9 +284,9 @@ class Trainer:
                     "score": self.early_score,
                     "counter": self.early_counter,
                 },
-                "model": self.model,
-                "optimizer": self.optimizer,
-                "scheduler": self.scheduler,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "scheduler_state_dict": self.scheduler.state_dict(),
                 "global_step": self.logger.global_step,
                 "epoch_id": self.logger.epoch_id,
             },
@@ -304,6 +305,6 @@ class Trainer:
         self.early_score = state_dict["early"]["score"]
         self.early_counter = state_dict["early"]["counter"]
 
-        self.model.load_state_dict(state_dict["model"])
-        self.optimizer.load_state_dict(state_dict["optimizer"])
-        self.scheduler.load_state_dict(state_dict["scheduler"])
+        self.model.load_state_dict(state_dict["model_state_dict"])
+        self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
+        self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
