@@ -28,6 +28,7 @@ def plot_2D_comparative_trajectories(
     intermediate_states = torch.cat([s.unsqueeze(1) for s in intermediate_states], 1)
     # batch x time x dim
     trajectories = torch.cat([trajectories, intermediate_states], 1).cpu().numpy()
+    batch = batch.cpu().numpy()
     colors = plt.cm.jet(np.linspace(0, 1, len(initial_states)))
 
     k = 0
