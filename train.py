@@ -4,7 +4,7 @@ from comet_ml import Experiment
 from koop.opts import Opts
 from koop.trainer import Trainer
 from koop.utils import (
-    comet_kwargs,
+    COMET_KWARGS,
     load_opts,
     make_output_dir,
     save_config,
@@ -32,14 +32,15 @@ if __name__ == "__main__":
         exp = Experiment(
             workspace=opts.comet.workspace,
             project_name=opts.comet.project_name,
-            **comet_kwargs
+            **COMET_KWARGS
         )
         exp.set_name(opts.output_path.name)
         upload_code_and_parameters(exp, opts)
 
-    save_config(opts, exp)
+    trainer = Trainer(opts, exp).setup()
 
-    trainer = Trainer(opts, exp)
-    trainer.setup()
+    save_config(trainer.opts, exp)
+
     trainer.train()
+
     print("\n >>>> Done training model in", str(opts.output_path))
