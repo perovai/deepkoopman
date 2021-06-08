@@ -147,7 +147,7 @@ class Trainer:
             self.early_counter += 1
             print(
                 "\nEarlyStopping counter: {} out of {}\n".format(
-                    self.early_counter, self.patience
+                    self.early_counter, self.opts.early.patience
                 )
             )
             if self.counter >= self.opts.early.patience:
