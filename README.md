@@ -46,6 +46,8 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
 * `train.py` uses `minydra` as a command-line parser (victor made it) meaning any option can be overwritten from the command-line
 * `Trainer`s have a `setup()` method to create the datasets, models, etc. then a `train()` method calling:
   * `run_epoch()` to execute an epoch
+  * `run_validation()` to compute the validation loss
+  * `update_early_stopping()` to stop training if the val loss has not improved for the past `opts.early.patience` epochs (7 as of now)
 
 ## Opts
 

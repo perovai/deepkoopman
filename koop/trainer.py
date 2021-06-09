@@ -227,8 +227,10 @@ class Trainer:
 
         best_val_loss = np.inf
         for self.logger.epoch_id in epochs:
+
             # train for 1 epoch
             self.run_epoch()
+
             # evaluate model
             val_loss = self.run_evaluation()
 
