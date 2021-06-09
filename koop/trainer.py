@@ -10,7 +10,8 @@ from koop.losses import Loss
 from koop.model import DeepKoopman
 from koop.opts import Opts
 from koop.utils import (
-    comet_kwargs,
+    COMET_KWARGS,
+    clean_checkpoints,
     find_existing_comet_id,
     get_optimizer,
     load_opts,
@@ -26,8 +27,14 @@ class Trainer:
         self.is_setup = False
         self.exp = exp
 
+        self.early_stop = False
+        self.early_score = None
+        self.early_counter = 0
+
     @classmethod
-    def resume_from_path(cls, path, overrides=None, exp_type="resume"):
+    def resume_from_path(
+        cls, path, overrides=None, exp_type="resume", inference_only=False
+    ):
         path = resolve(path)
 
         ckpt = "latest.ckpt"
@@ -39,6 +46,7 @@ class Trainer:
         opts_path = path / "opts.yaml"
         assert opts_path.exists()
         opts = load_opts(opts_path)
+        breakpoint()
         if isinstance(overrides, (Opts, dict)):
             opts.update(overrides)
 
@@ -46,18 +54,18 @@ class Trainer:
             exp = Experiment(
                 workspace=opts.comet.workspace,
                 project_name=opts.comet.project_name,
-                **comet_kwargs,
+                **COMET_KWARGS,
             )
         elif exp_type == "resume":
             comet_previous_id = find_existing_comet_id(path)
             exp = ExistingExperiment(
-                previous_experiment=comet_previous_id, **comet_kwargs
+                previous_experiment=comet_previous_id, **COMET_KWARGS
             )
         else:
             exp = None
 
         trainer = cls(opts, exp)
-        trainer.setup()
+        trainer.setup(inference_only)
 
         if ckpt is not None and (path / ckpt).exists():
             print("Loading checkpoint :", str(path / ckpt))
@@ -81,7 +89,7 @@ class Trainer:
         trainer.setup()
         return trainer
 
-    def setup(self):
+    def setup(self, inference_only=False):
         """
         Set the trainer up. Those functions are basically an initialization but
         having it as a separate function allows for intermediate debugging manipulations
@@ -91,16 +99,24 @@ class Trainer:
             f"{mode}_lim": self.opts.get("limit", {}).get(mode, -1)
             for mode in ["train", "val", "test"]
         }
-        self.loaders = create_dataloaders(
-            self.opts.data_folder,
-            self.opts.sequence_length,
-            self.opts.batch_size,
-            self.opts.workers,
-            **lims,
-        )
+        if not inference_only:
+            self.loaders = create_dataloaders(
+                self.opts.data_folder,
+                self.opts.sequence_length,
+                self.opts.batch_size,
+                self.opts.workers,
+                **lims,
+            )
 
         # set input dim based on data formatting
-        self.opts.input_dim = self.loaders["train"].dataset.input_dim
+        if "input_dim" not in self.opts:
+            if hasattr(self, "loaders"):
+                self.opts.input_dim = self.loaders["train"].dataset.input_dim
+            else:
+                raise ValueError(
+                    "Setup Error: cannot setup a trainer with "
+                    + "no loaders and no `input_dim` in its opts"
+                )
 
         # find device
         if torch.cuda.is_available():
@@ -118,19 +134,48 @@ class Trainer:
         # create loss util
         self.losses = Loss(self.opts)
 
-        # create logger to abstract prints away from the main code
-        self.logger = Logger(
-            self.opts,
-            self.exp,
-            n_train=len(self.loaders["train"]),
-            n_val=len(self.loaders["val"]),
-            n_test=len(self.loaders["test"]),
-        )
-        # create optimizer from opts
-        self.optimizer, self.scheduler = get_optimizer(self.opts, self.model)
+        if not inference_only:
+            # create logger to abstract prints away from the main code
+            self.logger = Logger(
+                self.opts,
+                self.exp,
+                n_train=len(self.loaders["train"]),
+                n_val=len(self.loaders["val"]),
+                n_test=len(self.loaders["test"]),
+            )
+            # create optimizer from opts
+            self.optimizer, self.scheduler = get_optimizer(self.opts, self.model)
+
+        if inference_only:
+            print(
+                "/!\\ Trainer created for inference only:",
+                "no logger, no data-loaders, no optimizer",
+            )
 
         # trainer is good to go
         self.is_setup = True
+
+        return self  # enable chain calls
+
+    def update_early_stopping(self, val_loss):
+        score = -val_loss
+
+        if self.early_score is None:
+            self.early_score = score
+            self.save(loss=val_loss)
+        elif score < self.early_score + self.opts.early.min_delta:
+            self.early_counter += 1
+            print(
+                "\nEarlyStopping counter: {} out of {}".format(
+                    self.early_counter, self.opts.early.patience
+                )
+            )
+            if self.early_counter >= self.opts.early.patience:
+                self.early_stop = True
+        else:
+            self.early_score = score
+            self.save(loss=val_loss)
+            self.early_counter = 0
 
     def dev_batch(self, mode="train"):
         """
@@ -180,14 +225,33 @@ class Trainer:
         print("\n>>> Starting training")
         epochs = range(self.logger.epoch_id, self.logger.epoch_id + self.opts.epochs)
 
+        best_val_loss = np.inf
         for self.logger.epoch_id in epochs:
+            # train for 1 epoch
             self.run_epoch()
+            # evaluate model
             val_loss = self.run_evaluation()
+
+            # update scheduler
             if self.scheduler is not None:
                 self.scheduler.step(val_loss)
-            self.save()  # save latest
-            self.save(self.logger.epoch_id)  # save intermediate checkpoint
+
+            # save best
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                self.save(name="best.ckpt")
+
+            # update early-stopping using the val_loss criterion
+            self.update_early_stopping(val_loss)  # saves if improvement
+
+            # save latest checkpoint anyway
+            self.save()
             print()
+
+            if self.early_stop:
+                print("\nEarlyStopping: Patience exceeded, stopping training\n")
+                break
+
         if self.opts.input_dim == 2:
             val_trajs_len = (
                 self.opts.val_trajectories.length
@@ -197,6 +261,8 @@ class Trainer:
             batch = next(iter(self.loaders["val"]))
             batch = batch[: self.opts.val_trajectories.n].to(self.device)
 
+            best_state = torch.load(str(self.opts.output_path / "best.ckpt"))
+            self.model.load_state_dict(best_state["model_state_dict"])
             plot_2D_comparative_trajectories(
                 self.model,
                 batch,
@@ -231,36 +297,56 @@ class Trainer:
         print()
         return losses["total"]
 
-    def save(self, epoch=-1):
-        # don't save if epoch is provided and it's not the right time
-        if epoch > 0 and self.logger.epoch_id % self.opts.save_every != 0:
-            return
+    def save(self, loss=None, name=None):
 
         # if epoch is not provided just save as "latest.ckpt"
-        if epoch < 0:
+        if loss is None and name is None:
             name = "latest.ckpt"
+        elif name is None:
+            name = "epoch_{}_loss_{:.4f}.ckpt".format(
+                str(self.logger.epoch_id).zfill(3), loss
+            )
         else:
-            name = "epoch_{}.ckpt".format(str(epoch).zfill(3))
+            # name is given
+            pass
+
+        clean_checkpoints(self.opts.output_path, n_max=5)
 
         torch.save(
             {
-                "model": self.model,
+                "early": {
+                    "stop": self.early_stop,
+                    "score": self.early_score,
+                    "counter": self.early_counter,
+                },
+                "logger": {
+                    "global_step": self.logger.global_step,
+                    "epoch_id": self.logger.epoch_id,
+                    "val_loss": loss,
+                },
                 "model_state_dict": self.model.state_dict(),
-                "optimizer": self.optimizer,
                 "optimizer_state_dict": self.optimizer.state_dict(),
-                "scheduler": self.scheduler,
                 "scheduler_state_dict": self.scheduler.state_dict(),
-                "global_step": self.logger.global_step,
-                "epoch_id": self.logger.epoch_id,
             },
             str(self.opts.output_path / name),
         )
 
     def load(self, path):
         path = resolve(path)
+
         state_dict = torch.load(str(path))
-        self.logger.global_step = state_dict["global_step"]
-        self.logger.epoch_id = state_dict["epoch_id"]
+
+        if hasattr(self, "logger"):
+            self.logger.global_step = state_dict["logger"]["global_step"]
+            self.logger.epoch_id = state_dict["logger"]["epoch_id"]
+
+        self.early_stop = state_dict["early"]["stop"]
+        self.early_score = state_dict["early"]["score"]
+        self.early_counter = state_dict["early"]["counter"]
+
         self.model.load_state_dict(state_dict["model_state_dict"])
-        self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
-        self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
+
+        if hasattr(self, "optimizer"):
+            self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
+        if hasattr(self, "scheduler"):
+            self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])

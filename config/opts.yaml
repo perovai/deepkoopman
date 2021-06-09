@@ -5,6 +5,8 @@
 # 2/  parameter:
 #       task: value will be used for a specific task only
 
+# known tasks: [discrete, pendulum, fluidbox, attractor]
+
 # ------------------
 # -----  DATA  -----
 # ------------------
@@ -22,10 +24,9 @@ sequence_length:
   attractor: 121
 
 limit: # limit the number of samples loaded ; <=0 means no limit
-  all:
-    train: -1
-    val: -1
-    test: -1
+  train: -1
+  val: -1
+  test: -1
 
 # -------------------
 # -----  MODEL  -----
@@ -107,26 +108,26 @@ batch_size: 128
 workers: 4
 
 epochs: 4
-save_every: 5
 
 optimizer:
-  all:
-    name: adam
-    lr: 0.001
-    scheduler: plateau
+  name: adam
+  lr: 0.001
+  scheduler: plateau
 
 comet:
-  all:
-    use: true
-    project_name: aiphysim
-    workspace: vict0rsch
+  use: true
+  project_name: aiphysim
+  workspace: vict0rsch
+
+early: # early_stopping params
+  patience: 7
+  min_delta: 0.0
 
 # ------------------------
 # -----  EVALUATION  -----
 # ------------------------
 
 val_trajectories:
-  all:
-    n: 20 # number of validation trajectories to plot
-    length: -1 # validation trajectory length ; <0 => seq. len.
-    n_per_plot: 10
+  n: 20 # number of validation trajectories to plot
+  length: -1 # validation trajectory length ; <0 => seq. len.
+  n_per_plot: 10

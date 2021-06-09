@@ -43,14 +43,14 @@ def plot_2D_comparative_trajectories(
                 trajectories[k, :, 1],
                 color=colors[k],
                 marker="o",
-                alpha=0.5,
+                alpha=0.3,
             )
             plt.scatter(
                 batch[k, : (n_steps + 1), 0],
                 batch[k, : (n_steps + 1), 1],
                 color=colors[k],
                 marker="x",
-                alpha=0.5,
+                alpha=0.3,
             )
             # breakpoint()
             k += 1

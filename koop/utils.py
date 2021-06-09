@@ -1,3 +1,4 @@
+import os
 from os.path import expandvars
 from pathlib import Path
 
@@ -10,13 +11,15 @@ from yaml import safe_load
 
 from koop.opts import Opts
 
-comet_kwargs = {
+COMET_KWARGS = {
     "auto_metric_logging": False,
     "parse_args": True,
     "log_env_gpu": True,
     "log_env_cpu": True,
     "display_summary_level": 0,
 }
+
+KNOWN_TASKS = set(["discrete", "pendulum", "fluidbox", "attractor"])
 
 
 def mem_size(model):
@@ -58,7 +61,7 @@ def resolve(path):
     return Path(expandvars(str(path))).expanduser().resolve()
 
 
-def load_opts(path="./config/opts.yaml", task=None):
+def load_opts(path="./config/opts.yaml", task=None, known_tasks=KNOWN_TASKS):
     """
     Load opts from a yaml config for a specific task
 
@@ -80,10 +83,11 @@ def load_opts(path="./config/opts.yaml", task=None):
     params = {}
     for key, value in all_params.items():
         if isinstance(value, dict):
-            if "all" in value:
-                params[key] = value["all"]
-            elif task in value:
-                params[key] = value[task]
+            if any(k in known_tasks for k in value):
+                if task in value:
+                    params[key] = value[task]
+            else:
+                params[key] = value
         else:
             params[key] = value
 
@@ -188,7 +192,7 @@ def upload_code_and_parameters(exp: Experiment, opts: Opts):
     exp.log_parameters(opts_dict, prefix="opts")
 
 
-def save_config(opts, exp):
+def save_config(opts, exp=None):
     if opts.get("dev"):
         print("Dev mode : config not saved to disk")
         return
@@ -258,3 +262,15 @@ def flatten_opts(opts: Dict) -> dict:
 
     p(opts, vals=values_list)
     return dict(values_list)
+
+
+def clean_checkpoints(path, n_max=5):
+    path = resolve(path)
+    ckpts = list(path.glob("*.ckpt"))
+    ckpts = [c for c in ckpts if c.name not in ["latest.ckpt", "best.ckpt"]]
+
+    if len(ckpts) < n_max:
+        return
+
+    sorted_ckpts = sorted(ckpts, key=lambda c: float(c.stem.split("loss_")[-1]))
+    os.remove(sorted_ckpts[-1])
