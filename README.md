@@ -25,6 +25,27 @@ $ pre-commit run --all-files
 
 Code style: use `black` to format the code and `flake8` to lint (and help you!)
 
+### Getting started with comet_ml
+
+1. Create an account https://www.comet.ml/signup
+2. In your account settings go to `Developper Information`, then `Generate an API Key` and copy it.
+3. Create a `~/.comet.config` file in your home with the following lines:
+
+  ```ini
+  [comet]
+  api_key=<YOUR COPIED API_KEY>
+  workspace=<YOUR USERNAME>
+  ```
+
+1. Share your username with victor to be added as a collaborator and you're good to go :)
+
+## Code structure
+
+* The main component to execute code is a `Trainer` object. It's an object-oriented programming way of stitching together many moving parts: pytorch models, data loaders, optimizers, schedulers, losses etc.
+* The trainer is parametrized by `opts` (options, =hyper-parameters) which are loaded in `train.py`
+* `train.py` uses `minydra` as a command-line parser (victor made it) meaning any option can be overwritten from the command-line
+* `Trainer`s have a `setup()` method to create the datasets, models, etc. then a `train()` method calling:
+  * `run_epoch()` to execute an epoch
 
 ## Opts
 
@@ -60,20 +81,17 @@ The `opts` keys can be specified:
     ```
 
 * for all tasks
-  * if it's a simple value:
-
     ```yaml
     param: value
     ```
 
-  * if it's a dict:
+  or
 
     ```yaml
     param:
-      all:
-        key1: value1
-        key2: value2
-        ...
+      key1: value1
+      key2: value2
+      ...
     ```
 
 ## Run
