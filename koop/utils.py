@@ -267,7 +267,7 @@ def flatten_opts(opts: Dict) -> dict:
 def clean_checkpoints(path, n_max=5):
     path = resolve(path)
     ckpts = list(path.glob("*.ckpt"))
-    ckpts = [c for c in ckpts if c.name not in ['latest.ckpt', 'best.ckpt']]
+    ckpts = [c for c in ckpts if c.name not in ["latest.ckpt", "best.ckpt"]]
 
     if len(ckpts) < n_max:
         return

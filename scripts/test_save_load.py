@@ -1,11 +1,11 @@
+import os
 import sys
 from pathlib import Path
-import os
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from koop.trainer import Trainer
-from koop.utils import load_opts, save_config, make_output_dir
+from koop.trainer import Trainer  # noqa: E402
+from koop.utils import load_opts, make_output_dir, save_config  # noqa: E402
 
 if __name__ == "__main__":
 
