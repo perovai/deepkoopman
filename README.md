@@ -68,7 +68,7 @@ prints:
 ```python
 True
 ...
-KeyError: 'losses'
+KeyError: 'unknown'
 ```
 
 ### opts.yaml
