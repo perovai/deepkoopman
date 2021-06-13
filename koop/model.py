@@ -107,17 +107,33 @@ class Auxiliary(nn.Module):
 class DeepKoopman(nn.Module):
     def __init__(self, params):
         super().__init__()
+        self.n_shifts = params['num_shifts']
+        self.shifts = np.arange(self.n_shifts) + 1
         self.num_timesteps = params["sequence_length"] - 1
         self.encoder = Encoder(params)
         self.decoder = Decoder(params)
         self.auxiliary = Auxiliary(params)
 
     def forward(self, inputs):
-        embedding = self.encoder.forward(inputs)
-        embedding_evolution = self.evolve_embedding(embedding)
-        reconstruction = self.decoder.forward(embedding)
-        state_evolution = self.decoder.forward(embedding_evolution)
 
+        # https://github.com/BethanyL/DeepKoopman/blob/cad065179def289539d7ce162a261343895c9f99/networkarch.py#L412
+        embedding = self.encoder(inputs) # latent state
+        reconstruction = self.decoder(embedding) #
+
+        koopman_operator = self.auxiliary.forward(embedding)
+        next_embedding = (koopman_operator @ embedding.unsqueeze(2)).squeeze()
+        breakpoint()
+
+        state_evolution = []
+        for j in np.arange(max(self.shifts)):
+            if j + 1 in self.shifts:
+                state_evolution.append(self.decoder(next_embedding))
+
+            koopman_operator = self.auxiliary.forward(embedding)
+            next_embedding = (koopman_operator @ embedding.unsqueeze(2)).squeeze()
+
+        breakpoint()
+        state_evolution = torch.cat([y.unsqueeze(1) for y in state_evolution], dim=1) # batch x n_shifts x input_dim
         return reconstruction, embedding_evolution, state_evolution
 
     def evolve_embedding(self, embedding):

@@ -82,9 +82,11 @@ losses:
 
 weights:
   discrete:
-    reconstruction: 1
+    reconstruction: 0.1
     koopman: 1
-    prediction: 1
+    prediction: 0.1
+    inf_norm: 1e-7
+    l2: 1e-15
   pendulum:
     reconstruction: 1
     koopman: 1
@@ -97,6 +99,9 @@ weights:
     reconstruction: 1
     koopman: 1
     prediction: 1
+
+num_shifts:
+  discrete: 30
 
 # ----------------------
 # -----  TRAINING  -----
