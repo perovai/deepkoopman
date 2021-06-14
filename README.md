@@ -49,6 +49,14 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
   * `run_validation()` to compute the validation loss
   * `update_early_stopping()` to stop training if the val loss has not improved for the past `opts.early.patience` epochs (7 as of now)
 
+
+## Data
+
+DeepKoopman Datasets
+
+https://drive.google.com/file/d/1XRfa4EQ3JauAmlMxE92_kBvGg126DrfM/view?usp=sharing
+
+unzip and put sub-folders in `datasets/`
 ## Opts
 
 The trainer/model opts are not your regular dict, rather an `addict`: check out [addict](https://github.com/mewwts/addict) to have dot access:
