@@ -113,10 +113,11 @@ class DeepKoopman(nn.Module):
         self.auxiliary = Auxiliary(params)
 
     def forward(self, inputs):
-        embedding = self.encoder.forward(inputs)
-        embedding_evolution = self.evolve_embedding(embedding)
-        reconstruction = self.decoder.forward(embedding)
-        state_evolution = self.decoder.forward(embedding_evolution)
+        # inputs: x_t
+        embedding = self.encoder.forward(inputs)  # z_t
+        embedding_evolution = self.evolve_embedding(embedding)  # z_t+1, .. z_t+k
+        reconstruction = self.decoder.forward(embedding)  # x'_t
+        state_evolution = self.decoder.forward(embedding_evolution)  # x'_t+1, .. x'_t+k
 
         return reconstruction, embedding_evolution, state_evolution
 
