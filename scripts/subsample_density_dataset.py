@@ -71,14 +71,19 @@ if __name__ == "__main__":
     if i1 == "all":
         i1s = [resolve(i) for d in datasets for i in d.glob("spectrum_Intensity_*")]
     else:
-        if isinstance(i1, str):
+        if not isinstance(i1, list):
             i1 = [i1]
-        i1s = [resolve(d / f"spectrum_Intensity_.{i}") for d in datasets for i in i1]
+        i1s = [
+            resolve(t)
+            for d in datasets
+            for i in i1
+            for t in d.glob(f"spectrum_Intensity_*{i}*")
+        ]
 
     if t3 == "all":
         t3s = [resolve(i) for i1 in i1s for i in i1.glob("spectrum_Intensity_*")]
     else:
-        if isinstance(t3, str):
+        if not isinstance(t3, list):
             t3 = [t3]
         t3s = [
             resolve(t)
