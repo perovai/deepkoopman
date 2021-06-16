@@ -1,6 +1,7 @@
 import sys
 import ast
 from pathlib import Path
+import glob
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     elif "files" in args:
         files = [resolve(p) for p in args.files]
     elif "glob" in args:
-        files = [resolve(p) for p in Path.glob(args.glob)]
+        files = [resolve(p) for p in glob.glob(args.glob)]
     else:
         raise ValueError('Provide file=path or glob=path/*.X or files=\'["a", "b"]\'')
 
