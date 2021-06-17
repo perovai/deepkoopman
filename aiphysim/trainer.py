@@ -3,13 +3,13 @@ import torch
 from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
 
-from koop.dataloading import create_dataloaders
-from koop.eval import plot_2D_comparative_trajectories
-from koop.logger import Logger
-from koop.losses import Loss
-from koop.model import DeepKoopman
-from koop.opts import Opts
-from koop.utils import (
+from aiphysim.dataloading import create_dataloaders
+from aiphysim.eval import plot_2D_comparative_trajectories
+from aiphysim.logger import Logger
+from aiphysim.losses import Loss
+from aiphysim.model import DeepKoopman
+from aiphysim.opts import Opts
+from aiphysim.utils import (
     COMET_KWARGS,
     clean_checkpoints,
     find_existing_comet_id,
@@ -79,7 +79,7 @@ class Trainer:
         Utility method to quickly get a trainer and debug stuff
 
         ```
-        from koop.trainer import Trainer
+        from aiphysim.trainer import Trainer
 
         trainer = Trainer.debug_trainer()
         ```

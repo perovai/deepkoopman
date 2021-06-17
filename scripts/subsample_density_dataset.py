@@ -7,7 +7,7 @@ import numpy as np
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import minydra
 
-from koop.utils import resolve, new_unique_path
+from aiphysim.utils import resolve, new_unique_path
 
 
 def dat_to_array(fname, shape=3):
