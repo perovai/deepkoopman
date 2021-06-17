@@ -105,7 +105,9 @@ def sample_files(path, datasets, i1, t3, ignore_delays):
             for t in i1.glob(f"spectrum_Intensity_*_t2_{i}.0")
         ]
 
-    print("t3s: ", sorted(set([t.name for t in t3s])))
+    print(
+        "t3s: ", sorted(set([t.name.replace("spectrum_Intensity_", "") for t in t3s]))
+    )
 
     keep_indices = np.arange(1, 501, ignore_delays)
 
@@ -121,6 +123,9 @@ def sample_files(path, datasets, i1, t3, ignore_delays):
 
 
 if __name__ == "__main__":
+
+    # run subsample_density_dataset.py path=/network/tmp1/schmidtv/perovai datasets=training_set1 i1___str="02104" ignore_delays=10
+
     parser = minydra.Parser()
     args = parser.args.resolve()
 
