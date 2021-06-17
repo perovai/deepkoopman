@@ -64,6 +64,8 @@ def sample_files(path, datasets, i1, t3, ignore_delays):
         ignore_delays (int): the step of the range to select files
     """
 
+    print("\n" + "-" * 50 + "\n")
+
     if datasets == "all":
         datasets = [d for d in path.iterdir() if d.is_dir()]
     else:
@@ -76,6 +78,7 @@ def sample_files(path, datasets, i1, t3, ignore_delays):
                 "Warning! Those datasets do not exist:\n"
                 + "\n".join(list(map(str, ignoring)))
             )
+    print("datasets: ", sorted(set([d.name for d in datasets])))
 
     if i1 == "all":
         i1s = [resolve(i) for d in datasets for i in d.glob("spectrum_Intensity_*")]
@@ -88,6 +91,7 @@ def sample_files(path, datasets, i1, t3, ignore_delays):
             for i in i1
             for t in d.glob(f"spectrum_Intensity_*{i}*")
         ]
+    print("intensities: ", sorted(set([i.name for i in i1s])))
 
     if t3 == "all":
         t3s = [resolve(i) for i1 in i1s for i in i1.glob("spectrum_Intensity_*")]
@@ -101,11 +105,17 @@ def sample_files(path, datasets, i1, t3, ignore_delays):
             for t in i1.glob(f"spectrum_Intensity_*_t2_{i}.0")
         ]
 
+    print("t3s: ", sorted(set([t.name for t in t3s])))
+
     keep_indices = np.arange(1, 501, ignore_delays)
+
+    print("delays: ", list(keep_indices))
 
     files = [
         resolve(t3 / str(delay) / "DYNAMICSdat") for t3 in t3s for delay in keep_indices
     ]
+
+    print(">>> Found", len(files), "files.")
 
     return files
 
