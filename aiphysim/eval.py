@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from aiphysim.model import DeepKoopman
+from aiphysim.models.koopman import DeepKoopman
 from aiphysim.utils import resolve
 
 

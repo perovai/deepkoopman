@@ -62,40 +62,42 @@ latent_dim:
   fluidbox: 3
   attractor: 3
 
-losses:
+loss_type: koopman # loss processing scheme
+
+losses: # individual loss functions to use
   discrete:
     reconstruction: true
-    koopman: true
+    latent_evolution: true
     prediction: true
   pendulum:
     reconstruction: true
-    koopman: true
+    latent_evolution: true
     prediction: true
   fluidbox:
     reconstruction: true
-    koopman: true
+    latent_evolution: true
     prediction: true
   attractor:
     reconstruction: true
-    koopman: true
+    latent_evolution: true
     prediction: true
 
 weights:
   discrete:
     reconstruction: 1
-    koopman: 1
+    latent_evolution: 1
     prediction: 1
   pendulum:
     reconstruction: 1
-    koopman: 1
+    latent_evolution: 1
     prediction: 1
   fluidbox:
     reconstruction: 1
-    koopman: 1
+    latent_evolution: 1
     prediction: 1
   attractor:
     reconstruction: 1
-    koopman: 1
+    latent_evolution: 1
     prediction: 1
 
 # ----------------------

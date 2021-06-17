@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     pwd = Path().resolve()
 
-    if pwd.name != "deepkoopman" and "koop" not in [
+    if pwd.name != "deepkoopman" and "aiphysim" not in [
         p.name for p in pwd.iterdir() if p.is_dir()
     ]:
         os.chdir(pwd.parent)

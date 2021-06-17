@@ -6,8 +6,8 @@ from tqdm import tqdm
 from aiphysim.dataloading import create_dataloaders
 from aiphysim.eval import plot_2D_comparative_trajectories
 from aiphysim.logger import Logger
-from aiphysim.losses import Loss
-from aiphysim.model import DeepKoopman
+from aiphysim.losses import get_loss
+from aiphysim.models.koopman import DeepKoopman
 from aiphysim.opts import Opts
 from aiphysim.utils import (
     COMET_KWARGS,
@@ -132,7 +132,7 @@ class Trainer:
         print(num_params(self.model))
 
         # create loss util
-        self.losses = Loss(self.opts)
+        self.losses = get_loss(self.opts)
 
         if not inference_only:
             # create logger to abstract prints away from the main code
