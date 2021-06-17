@@ -189,7 +189,7 @@ if __name__ == "__main__":
             d = f5.create_dataset(
                 f"trajectory_{i}",
                 data=data,
-                dtype="f32",
+                dtype="f",
                 compression="gzip",
                 compression_opts=4,
             )
