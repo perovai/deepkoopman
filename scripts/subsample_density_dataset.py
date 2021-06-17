@@ -159,7 +159,7 @@ if __name__ == "__main__":
         ):
             print("Aborting")
             sys.exit()
-        slurm_tmpdir = resolve("$SLURM_TMPDIR")
+        slurm_tmpdir = resolve("/Tmp/slurm.$SLURM_JOB_ID.0")
         assert slurm_tmpdir.exists()
         out = new_unique_path(slurm_tmpdir / "mini-dataset.h5")
     else:
