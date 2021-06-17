@@ -3,7 +3,6 @@ import ast
 from pathlib import Path
 import h5py
 import numpy as np
-import os
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import minydra
@@ -184,7 +183,7 @@ if __name__ == "__main__":
         f5.attrs.update(dict(args))
 
         for i, f in enumerate(files):
-            print(str(f[-30:]), str(i).zfill(4) + f"/{len(files)}", end="\r")
+            print(str(f)[-30:].ljust(30), str(i).zfill(4) + f"/{len(files)}", end="\r")
             labels = label_file(f)
             data = dat_to_array(f, shape=3)
             d = f5.create_dataset(
