@@ -23,6 +23,10 @@ sequence_length:
   fluidbox: 101
   attractor: 121
 
+num_shifts:
+  discrete: 30
+  pendulum: 30
+
 limit: # limit the number of samples loaded ; <=0 means no limit
   train: -1
   val: -1
@@ -66,27 +70,33 @@ loss_type: koopman # loss processing scheme
 
 losses: # individual loss functions to use
   discrete:
-    reconstruction: true
-    latent_evolution: true
-    prediction: true
+    - reconstruction
+    - latent_evolution
+    - prediction
+    - inf_norm
+    - l2
   pendulum:
-    reconstruction: true
-    latent_evolution: true
-    prediction: true
+    - reconstruction
+    - latent_evolution
+    - prediction
+    - inf_norm
+    - l2
   fluidbox:
-    reconstruction: true
-    latent_evolution: true
-    prediction: true
+    - reconstruction
+    - latent_evolution
+    - prediction
   attractor:
-    reconstruction: true
-    latent_evolution: true
-    prediction: true
+    - reconstruction
+    - latent_evolution
+    - prediction
 
 weights:
   discrete:
-    reconstruction: 1
+    reconstruction: 0.1
     latent_evolution: 1
-    prediction: 1
+    prediction: 0.1
+    inf_norm: 1e-7
+    l2: 1e-15
   pendulum:
     reconstruction: 1
     latent_evolution: 1
