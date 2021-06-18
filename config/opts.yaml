@@ -16,12 +16,21 @@ data_folder:
   pendulum: ./datasets/Pendulum
   fluidbox: ./datasets/FluidFlowBox
   attractor: ./datasets/FluidFlowOnAttractor
+  density: ./datasets/Density
+
+dataset_type:
+  discrete: koopman
+  pendulum: koopman
+  fluidbox: koopman
+  attractor: koopman
+  density: density
 
 sequence_length:
   discrete: 51
   pendulum: 51
   fluidbox: 101
   attractor: 121
+  density: 2499
 
 num_shifts:
   discrete: 30
