@@ -34,16 +34,7 @@ def create_datasets(
     raise ValueError("Unknown dataset type: " + str(dataset_type))
 
 
-def create_dataloaders(
-    path,
-    sequence_length,
-    batch_size,
-    dataset_type="koopman",
-    workers=2,
-    train_lim=-1,
-    val_lim=-1,
-    test_lim=-1,
-):
+def create_dataloaders(opts):
     """
     Return a dict of data loaders with keys train/val/test
 
@@ -55,9 +46,21 @@ def create_dataloaders(
     Returns:
         dict: {"train": dataloader, "val": dataloader, "test": dataloader}
     """
+
+    lims = {
+        f"{mode}": opts.get("limit", {}).get(mode, -1)
+        for mode in ["train", "val", "test"]
+    }
+
+    path = opts.data_folder
+    sequence_length = opts.sequence_length
+    batch_size = opts.batch_size
+    dataset_type = opts.dataset_type
+    workers = opts.workers
+
     path = Path(path).expanduser().resolve()
     datasets = create_datasets(
-        path, sequence_length, dataset_type, train_lim, val_lim, test_lim
+        path, sequence_length, dataset_type, lims["train"], lims["val"], lims["test"]
     )
     return {
         k: DataLoader(

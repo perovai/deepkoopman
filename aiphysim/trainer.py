@@ -95,19 +95,8 @@ class Trainer:
         having it as a separate function allows for intermediate debugging manipulations
         """
         # Create data loaders
-        lims = {
-            f"{mode}_lim": self.opts.get("limit", {}).get(mode, -1)
-            for mode in ["train", "val", "test"]
-        }
         if not inference_only:
-            self.loaders = create_dataloaders(
-                self.opts.data_folder,
-                self.opts.sequence_length,
-                self.opts.batch_size,
-                self.opts.dataset_type,
-                self.opts.workers,
-                **lims,
-            )
+            self.loaders = create_dataloaders(self.opts)
 
         # set input dim based on data formatting
         if "input_dim" not in self.opts:
