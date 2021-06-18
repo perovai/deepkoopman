@@ -45,35 +45,42 @@ limit: # limit the number of samples loaded ; <=0 means no limit
 # -----  MODEL  -----
 # -------------------
 
+model_type: koopman
+
 hidden_layers:
   discrete: 2
   pendulum: 2
   attractor: 2
   fluidbox: 2
+  density: 2
 
 hidden_dim:
   discrete: 128
   pendulum: 128
   fluidbox: 128
   attractor: 128
+  density: 256
 
 hidden_layers_aux:
   discrete: 1
   pendulum: 1
   fluidbox: 1
   attractor: 1
+  density: 2
 
 hidden_dim_aux:
   discrete: 64
   pendulum: 64
   fluidbox: 64
   attractor: 64
+  density: 64
 
 latent_dim:
   discrete: 3
   pendulum: 3
   fluidbox: 3
   attractor: 3
+  density: 3
 
 loss_type: koopman # loss processing scheme
 
@@ -98,6 +105,12 @@ losses: # individual loss functions to use
     - reconstruction
     - latent_evolution
     - prediction
+  density:
+    - reconstruction
+    - latent_evolution
+    - prediction
+    - inf_norm
+    - l2
 
 weights:
   discrete:
@@ -118,7 +131,12 @@ weights:
     reconstruction: 1
     latent_evolution: 1
     prediction: 1
-
+  density:
+    reconstruction: 0.1
+    latent_evolution: 1
+    prediction: 0.1
+    inf_norm: 1e-7
+    l2: 1e-15
 # ----------------------
 # -----  TRAINING  -----
 # ----------------------

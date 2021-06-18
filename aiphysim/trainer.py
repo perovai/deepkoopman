@@ -7,7 +7,7 @@ from aiphysim.dataloading import create_dataloaders
 from aiphysim.eval import plot_2D_comparative_trajectories
 from aiphysim.logger import Logger
 from aiphysim.losses import get_loss
-from aiphysim.models.koopman import DeepKoopman
+from aiphysim.models import create_model
 from aiphysim.opts import Opts
 from aiphysim.utils import (
     COMET_KWARGS,
@@ -104,6 +104,7 @@ class Trainer:
                 self.opts.data_folder,
                 self.opts.sequence_length,
                 self.opts.batch_size,
+                self.opts.dataset_type,
                 self.opts.workers,
                 **lims,
             )
@@ -127,7 +128,7 @@ class Trainer:
             print("No GPU -> using CPU:", self.device)
 
         # create NN
-        self.model = DeepKoopman(self.opts).to(self.device)
+        self.model = create_model(self.opts).to(self.device)
         print("\nModel parameters use", mem_size(self.model))
         print(num_params(self.model))
 
@@ -196,6 +197,7 @@ class Trainer:
         self.optimizer.zero_grad()
 
         state = batch[:, 0, :]  # batch_size x sequence_length x dimension
+        breakpoint()
         predictions = self.model.forward(state)
 
         train_losses = self.losses.compute(batch, predictions, self.model)

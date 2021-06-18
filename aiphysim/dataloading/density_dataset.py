@@ -9,8 +9,11 @@ class DensityDataset(Dataset):
         self.h5_paths = h5_paths
         self._archives = [h5py.File(h5_path, "r") for h5_path in self.h5_paths]
         self.indices = {}
+        self.input_dim = None
         idx = 0
         for a, archive in enumerate(self.archives):
+            if self.input_dim is None:
+                self.input_dim = list(archive.values())[0].shape[1:]
             for i in range(len(archive)):
                 self.indices[idx] = (a, i)
                 idx += 1
