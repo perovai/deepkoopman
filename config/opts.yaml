@@ -23,14 +23,41 @@ sequence_length:
   fluidbox: 101
   attractor: 121
 
-limit: # limit the number of samples loaded ; <=0 means no limit
-  train: -1
-  val: -1
-  test: -1
+
+delta_t:
+  discrete: 0.02
+
 
 # -------------------
 # -----  MODEL  -----
 # -------------------
+
+## omega net (auxiliary function)
+num_complex_pairs:
+  discrete: 0
+
+num_real:
+  discrete: 2
+
+width_omega_complex:
+  discrete: [10, 10, 10]
+
+widths_omega_real:
+  discrete: [10, 10, 10]
+
+# encoder architecture
+encoder_widths:
+  discrete: [30, 30] # first dimension is input_dim, and the last dimension is inferred as latent_dim = num_real + 2 * num_complex
+
+decoder_widths:
+  discrete: [30, 30] # first dimension is latent_dim, and the last dimension is inferred input_dim
+
+num_shifts:
+  discrete: 30
+
+# number of evolutions in latent space to compute (authors assume sequence_length-1 in all their experiments)
+num_shifts_middle:
+  discrete: 50
 
 hidden_layers:
   discrete: 2
@@ -57,7 +84,7 @@ hidden_dim_aux:
   attractor: 64
 
 latent_dim:
-  discrete: 3
+  discrete: 2
   pendulum: 3
   fluidbox: 3
   attractor: 3
@@ -83,8 +110,8 @@ losses:
 weights:
   discrete:
     reconstruction: 0.1
-    koopman: 1
     prediction: 0.1
+    linear: 1
     inf_norm: 1e-7
     l2: 1e-15
   pendulum:
@@ -100,23 +127,26 @@ weights:
     koopman: 1
     prediction: 1
 
-num_shifts:
-  discrete: 30
 
 # ----------------------
 # -----  TRAINING  -----
 # ----------------------
 
+
+limit: # limit the number of samples loaded ; <=0 means no limit
+  train: -1
+  val: -1
+  test: -1
+
 output_path: ./runs/v0
 
-batch_size: 128
+batch_size: 256
 workers: 4
-
-epochs: 4
+epochs: 20
 
 optimizer:
   name: adam
-  lr: 0.001
+  lr: 0.0001
   scheduler: plateau
 
 comet:
