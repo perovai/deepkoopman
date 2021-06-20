@@ -183,7 +183,8 @@ class Trainer:
         """
         assert self.is_setup
         batch = next(iter(self.loaders[mode]))
-        return batch[:, 0, :].to(self.device)
+        batch = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
+        return batch.to(self.device)
 
     def run_step(self, batch):
         """
@@ -195,10 +196,10 @@ class Trainer:
         """
         self.optimizer.zero_grad()
 
-        state = batch[:, 0, :]
+        state = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
         predictions = self.model.forward(state)
 
-        train_losses = self.losses.compute(batch, predictions, self.model)
+        train_losses = self.losses.compute(state, predictions, self.model)
         train_losses["total"].backward()
 
         self.optimizer.step()
@@ -287,9 +288,11 @@ class Trainer:
         print()
         for batch in tqdm(self.loaders["val"]):
             batch = batch.to(self.device)
-            state = batch[:, 0, :]
+
+            state = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
             predictions = self.model.forward(state)
-            val_losses = self.losses.compute(batch, predictions, self.model)
+
+            val_losses = self.losses.compute(state, predictions, self.model)
             if losses is None:
                 losses = {k: [] for k in val_losses}
             for k, v in val_losses.items():
@@ -328,7 +331,7 @@ class Trainer:
                 },
                 "model_state_dict": self.model.state_dict(),
                 "optimizer_state_dict": self.optimizer.state_dict(),
-                "scheduler_state_dict": self.scheduler.state_dict(),
+                "scheduler_state_dict": self.scheduler.state_dict() if self.scheduler else None,
             },
             str(self.opts.output_path / name),
         )
@@ -350,5 +353,5 @@ class Trainer:
 
         if hasattr(self, "optimizer"):
             self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
-        if hasattr(self, "scheduler"):
+        if hasattr(self, "scheduler") and self.scheduler:
             self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
