@@ -235,13 +235,10 @@ class DeepKoopman(nn.Module):
         intermediate_states = []
 
         embedding = self.encoder(initial_state)
+
         for _ in range(n_steps):
             next_embedding = self.omega_net(embedding)
-
-            if return_intermediate_states:
-                next_state = self.decoder(next_embedding)
-                intermediate_states.append(next_state)
-
+            intermediate_states.append(self.decoder(next_embedding))
             embedding = next_embedding
 
         final_state = self.decoder(embedding)
