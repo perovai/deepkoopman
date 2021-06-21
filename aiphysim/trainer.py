@@ -186,7 +186,6 @@ class Trainer:
         self.optimizer.zero_grad()
 
         state = batch[:, 0, :]  # batch_size x sequence_length x dimension
-        breakpoint()
         predictions = self.model.forward(state)
 
         train_losses = self.losses.compute(batch, predictions, self.model)
