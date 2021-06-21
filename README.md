@@ -149,3 +149,31 @@ print(array.shape)
 # (2499, 3, 6) -> 2499 time steps of a 3x3 complex matrix 
 # array[0, 0, :2] is a + ib, array[0, 0, 2:4] is c + id and array[0, 0, 4:6] is e + if
 ```
+
+## Physical Constraints and Background Reading
+
+### Physical Constraints
+
+There are a range of physical constraints / rules which dynamical open system should obey, depending on the precise setup and situation. Starting with the most basic:
+
+* Trace of the density matrix should equal exactly 1 at all times
+* The density matrix should equal its Hermitian conjugate
+* As a corollary to the above - the diagonal elements should all be real between 0 and 1, and off-diagonal elements should be complex-conjugate. 
+
+A few more specific properties which may or may not be relevant for our setup - I'm probably missing some here.
+
+* Depending on system-bath coupling, at equilibrium, the off-diagonal elements should decay to zero
+* Also depending on system-bath coupling, at equilibrium, the diagonal elements should thermalize (obey detailed balance condition) to a certain temperature.
+* There are certain properties to do with state purity and information flow between system and bath, though they might not be so easily untangled over the course of a laser experiment.
+
+### Background Reading
+
+I've had a look at some recent papers on ML method for schemical and open quantum/many-body dynamics. Some are straightforward and some I need to read more carefully. See the list here.
+
+* [SINDy Nets](https://www.pnas.org/content/pnas/116/45/22445.full.pdf)
+* [Our Koopman pproach](https://www.nature.com/articles/s41467-018-07210-0)
+* [Technical work on open quantum systems](https://arxiv.org/pdf/2009.05580.pdf)
+* [Deep autoregressive approach](https://journals.aps.org/prl/pdf/10.1103/PhysRevLett.124.020503?casa_token=FQRxHr56qG4AAAAA%3AezXAl8-sx5g-qjE_BpXMunfRSRL8VTyAz-KsxTE7uT9Uq34d7kwPPZl9KyUbvSDe0HaJW8gIEuaZoek)
+* [VAMPNets](https://www.nature.com/articles/s41467-017-02388-1)
+* [Kindof basic-seeming approach](https://www.sciencedirect.com/science/article/pii/S0301010418304336?casa_token=f52aa7YsslYAAAAA:8XG5IfnhslZd_SF38mlnOvsuhyaOo3y7dry1ocXH1uaEbONSZGaTAP2tsBor6dT6K96KKViLWR0)
+* [Nice review from the molecular kinetics point of view](https://pubs.acs.org/doi/full/10.1021/acs.chemrev.0c01195)
