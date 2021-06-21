@@ -1,0 +1,2 @@
+data_folder: ./datasets/FluidFlowBox
+sequence_length: 101

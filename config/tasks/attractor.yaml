@@ -1,0 +1,2 @@
+data_folder: ./datasets/FluidFlowOnAttractor
+sequence_length: 121
