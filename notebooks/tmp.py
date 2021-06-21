@@ -1,21 +1,15 @@
-import numpy as np
-
-from matplotlib import cm
-import matplotlib.pyplot as plt
-
 import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
+
 sys.path.append("../")
-from koop.opts import Opts
-from koop.trainer import Trainer
+from aiphysim.opts import Opts
+from aiphysim.trainer import Trainer
+from aiphysim.utils import load_opts, make_output_dir, resolve
 
-from koop.utils import (
-    load_opts,
-    make_output_dir,
-    resolve
-)
-
-
-opts = load_opts("../config/opts.yaml",  "discrete")
+opts = load_opts("../config/opts.yaml", "discrete")
 opts.output_path = make_output_dir(opts.output_path, dev=False)
 opts.data_folder = "../datasets/DiscreteSpectrumExample"
 trainer = Trainer(opts)

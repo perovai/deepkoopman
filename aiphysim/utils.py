@@ -9,7 +9,7 @@ from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
 
-from koop.opts import Opts
+from aiphysim.opts import Opts
 
 COMET_KWARGS = {
     "auto_metric_logging": False,
@@ -66,7 +66,7 @@ def load_opts(path="./config/opts.yaml", task=None, known_tasks=KNOWN_TASKS):
     Load opts from a yaml config for a specific task
 
     Returns:
-        koop.Opts: dot-accessible dict
+        aiphysim.Opts: dot-accessible dict
     """
     p = resolve(path)
     print("Loading parameters from {}".format(str(p)))
@@ -182,7 +182,7 @@ def upload_code_and_parameters(exp: Experiment, opts: Opts):
     py_files = []
     py_files += list(Path(__file__).resolve().parent.parent.glob("./*.py"))
     py_files += list(Path(__file__).resolve().parent.parent.glob("./scripts/*.py"))
-    py_files += list(Path(__file__).resolve().parent.parent.glob("./koop/*.py"))
+    py_files += list(Path(__file__).resolve().parent.parent.glob("./aiphysim/*.py"))
     for py in py_files:
         exp.log_asset(str(py), file_name=f"{py.parent.name}/{py.name}")
 
