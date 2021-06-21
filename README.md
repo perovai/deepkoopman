@@ -49,6 +49,14 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
   * `run_validation()` to compute the validation loss
   * `update_early_stopping()` to stop training if the val loss has not improved for the past `opts.early.patience` epochs (7 as of now)
 
+
+## Data
+
+DeepKoopman Datasets
+
+https://drive.google.com/file/d/1XRfa4EQ3JauAmlMxE92_kBvGg126DrfM/view?usp=sharing
+
+unzip and put sub-folders in `datasets/`
 ## Opts
 
 The trainer/model opts are not your regular dict, rather an `addict`: check out [addict](https://github.com/mewwts/addict) to have dot access:
@@ -120,3 +128,24 @@ outputs = trainer.model(batch)
 ## Misc
 
 * data in the original code is of shape `(num_shift + 1, batch, dim)` where `num_shifts` is `number of shifts (time steps) that losses will use (maximum is len_time - 1)`
+
+## Reading perovskite data
+
+```python
+from pathlib import Path
+import h5py
+
+file_path = Path() / "datasets" / "mini-dataset-modest-volhard.h5"
+
+f5 = h5py.File(file_path, 'r')
+
+dataset_0 = f5["trajectory_0"]
+
+print(dict(dataset_0.attrs))
+# {'delay': 0.0, 'i': 0.2104, 'set': 'training_set1', 't3': 0.0}
+
+array = dataset_0[()]
+print(array.shape)
+# (2499, 3, 6) -> 2499 time steps of a 3x3 complex matrix 
+# array[0, 0, :2] is a + ib, array[0, 0, 2:4] is c + id and array[0, 0, 4:6] is e + if
+```
