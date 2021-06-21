@@ -3,13 +3,13 @@ import torch
 from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
 
-from aiphysim.dataloading import create_dataloaders
-from aiphysim.eval import plot_2D_comparative_trajectories
-from aiphysim.logger import Logger
-from aiphysim.losses import get_loss
-from aiphysim.models import create_model
-from aiphysim.opts import Opts
-from aiphysim.utils import (
+from koop.dataloading import create_dataloaders
+from koop.eval import plot_2D_comparative_trajectories
+from koop.logger import Logger
+from koop.losses import Loss
+from koop.model import DeepKoopman
+from koop.opts import Opts
+from koop.utils import (
     COMET_KWARGS,
     clean_checkpoints,
     find_existing_comet_id,
@@ -79,7 +79,7 @@ class Trainer:
         Utility method to quickly get a trainer and debug stuff
 
         ```
-        from aiphysim.trainer import Trainer
+        from koop.trainer import Trainer
 
         trainer = Trainer.debug_trainer()
         ```
@@ -95,8 +95,18 @@ class Trainer:
         having it as a separate function allows for intermediate debugging manipulations
         """
         # Create data loaders
+        lims = {
+            f"{mode}_lim": self.opts.get("limit", {}).get(mode, -1)
+            for mode in ["train", "val", "test"]
+        }
         if not inference_only:
-            self.loaders = create_dataloaders(self.opts)
+            self.loaders = create_dataloaders(
+                self.opts.data_folder,
+                self.opts.sequence_length,
+                self.opts.batch_size,
+                self.opts.workers,
+                **lims,
+            )
 
         # set input dim based on data formatting
         if "input_dim" not in self.opts:
@@ -117,12 +127,12 @@ class Trainer:
             print("No GPU -> using CPU:", self.device)
 
         # create NN
-        self.model = create_model(self.opts).to(self.device)
+        self.model = DeepKoopman(self.opts).to(self.device)
         print("\nModel parameters use", mem_size(self.model))
         print(num_params(self.model))
 
         # create loss util
-        self.losses = get_loss(self.opts)
+        self.losses = Loss(self.opts)
 
         if not inference_only:
             # create logger to abstract prints away from the main code
