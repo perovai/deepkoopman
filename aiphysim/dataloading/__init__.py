@@ -1,10 +1,9 @@
 from pathlib import Path
 
-
 from torch.utils.data import DataLoader
 
-from .koopman_dataset import KoopmanDataset
 from .density_dataset import DensityDataset
+from .koopman_dataset import KoopmanDataset
 
 
 def create_datasets(
