@@ -62,7 +62,7 @@ unzip and put sub-folders in `datasets/`
 The trainer/model opts are not your regular dict, rather an `addict`: check out [addict](https://github.com/mewwts/addict) to have dot access:
 
 ```python
-from aiphysim.utils import Opts
+from koop.utils import Opts
 
 opts = Opts({"losses": {"recon": True, "koopman": True}})
 opts.epochs = 4
@@ -117,7 +117,7 @@ Note2: To log data to [comet.ml](https://comet.ml) checkout <https://www.comet.m
 
 ```python
 # dev mode: quickly getting a trainer and a batch
-from aiphysim.trainer import Trainer
+from koop.trainer import Trainer
 
 trainer = Trainer.debug_trainer()
 batch = trainer.dev_batch()

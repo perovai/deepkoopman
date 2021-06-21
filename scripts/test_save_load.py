@@ -4,14 +4,14 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from aiphysim.trainer import Trainer  # noqa: E402
-from aiphysim.utils import load_opts, make_output_dir, save_config  # noqa: E402
+from koop.trainer import Trainer  # noqa: E402
+from koop.utils import load_opts, make_output_dir, save_config  # noqa: E402
 
 if __name__ == "__main__":
 
     pwd = Path().resolve()
 
-    if pwd.name != "deepkoopman" and "aiphysim" not in [
+    if pwd.name != "deepkoopman" and "koop" not in [
         p.name for p in pwd.iterdir() if p.is_dir()
     ]:
         os.chdir(pwd.parent)

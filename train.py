@@ -1,9 +1,9 @@
 import minydra
 from comet_ml import Experiment
 
-from aiphysim.opts import Opts
-from aiphysim.trainer import Trainer
-from aiphysim.utils import (
+from koop.opts import Opts
+from koop.trainer import Trainer
+from koop.utils import (
     COMET_KWARGS,
     load_opts,
     make_output_dir,
