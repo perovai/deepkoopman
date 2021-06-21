@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from koop.model import DeepKoopman
-from koop.utils import resolve
+from aiphysim.models.koopman import DeepKoopman
+from aiphysim.utils import resolve
 
 
 def plot_2D_comparative_trajectories(

@@ -1,13 +1,14 @@
-import sys
 import ast
+import sys
 from pathlib import Path
+
 import h5py
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import minydra
 
-from koop.utils import resolve, new_unique_path
+from aiphysim.utils import new_unique_path, resolve
 
 
 def dat_to_array(fname, shape=3):
