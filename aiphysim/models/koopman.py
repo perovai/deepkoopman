@@ -118,7 +118,6 @@ class DeepKoopman(nn.Module):
         embedding_evolution = self.evolve_embedding(embedding)  # z_t+1, .. z_t+k
         reconstruction = self.decoder.forward(embedding)  # x'_t
         state_evolution = self.decoder.forward(embedding_evolution)  # x'_t+1, .. x'_t+k
-
         return reconstruction, embedding_evolution, state_evolution
 
     def evolve_embedding(self, embedding):
