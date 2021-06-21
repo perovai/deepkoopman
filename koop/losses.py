@@ -1,29 +1,19 @@
 import torch
-
-
-def get_reconstruction_loss(reconstruction, state):
-    return torch.nn.functional.mse_loss(reconstruction, state)
-
-
-def get_prediction_loss(state_evolution, sequence):
-    return torch.nn.functional.mse_loss(state_evolution, sequence)
-
-
-def get_koopman_loss(embedding_evolution, sequence, encoder):
-    embedding_sequence = encoder(sequence)
-    return torch.nn.functional.mse_loss(embedding_evolution, embedding_sequence)
-
+import numpy as np
 
 class Loss:
     def __init__(self, opts):
-        self.weights = opts.weights
-        self.reconstruction = (
-            get_reconstruction_loss if opts.losses.get("reconstruction") else None
-        )
-        self.koopman = get_koopman_loss if opts.losses.get("koopman") else None
-        self.prediction = get_prediction_loss if opts.losses.get("prediction") else None
+        self.params = opts
 
-    def compute(self, targets, predictions, model=None):
+        self.n_shifts = opts['num_shifts']
+        self.shifts = np.arange(self.n_shifts) + 1
+
+        self.n_middle_shifts = opts["num_shifts_middle"]
+        self.middle_shifts = np.arange(self.n_middle_shifts) + 1
+
+        self.weights = opts.weights
+
+    def compute(self, inputs, predictions, model=None):
         """
         Compute the weighted loss with respect to targets and predictions
 
@@ -31,31 +21,55 @@ class Loss:
             targets (dict): dictionnary of target values
             predictions (dict): dictionnary of predicted values
         """
-        reconstruction, embedding_evolution, state_evolution = predictions
-        state = targets[:, 0, ...]
-        sequence = targets[:, 1:, ...]
+        embedding, y, latent_evol = predictions
 
         losses = {"total": 0.0}
 
-        if self.reconstruction:
-            losses["reconstruction"] = self.reconstruction(reconstruction, state)
-            losses["total"] += (
-                self.weights.get("reconstruction", 1) * losses["reconstruction"]
-            )
+        # autoencoder loss
+        if self.weights.get("reconstruction", 0) > 0:
+            losses["reconstruction"] = torch.nn.functional.mse_loss(inputs[0, :, :], y[0])
+            losses["total"] += self.weights.get("reconstruction") * losses["reconstruction"]
 
-        if self.prediction:
-            losses["prediction"] = self.prediction(state_evolution, sequence)
-            losses["total"] += self.weights.get("prediction", 1) * losses["prediction"]
+        # https://github.com/BethanyL/DeepKoopman/blob/master/training.py#L48
+        # dynamics / prediction loss
+        if self.weights.get("prediction", 0) > 0:
+            losses["prediction"] = 0
+            for shift in self.shifts:
+                losses["prediction"] += torch.nn.functional.mse_loss(inputs[shift, :, :], y[shift])
+            losses["prediction"] /= self.n_shifts
+            losses["total"] += self.weights.get("prediction") * losses["prediction"]
 
-        if self.koopman:
-            assert isinstance(model, torch.nn.Module)
-            assert hasattr(model, "encoder")
+        # https://github.com/BethanyL/DeepKoopman/blob/master/training.py#L62
+        # linear loss
+        if self.weights.get("linear", 0) > 0:
+            losses["linear"] = 0
+            for j in np.arange(self.n_middle_shifts):
+                shift = self.middle_shifts[j]
+                losses["linear"] += torch.nn.functional.mse_loss(embedding[shift, :, :], latent_evol[j])
 
-            losses["koopman"] = self.koopman(
-                embedding_evolution,
-                sequence,
-                model.encoder,
-            )
-            losses["total"] += self.weights.get("koopman", 1) * losses["koopman"]
+            losses["linear"] /= self.n_middle_shifts
+            losses["total"] += self.weights.get("linear") * losses["linear"]
+
+        # TODO: config should take in scientific notation
+        l2_weights = eval(self.weights.get("l2", 0))
+        if l2_weights > 0:
+            assert model is not None, "model is needed to regularize them"
+
+            l2_reg = torch.tensor(0.).to(inputs.device)
+            for param in model.parameters():
+                l2_reg += torch.norm(param)
+
+            losses['l2_norm'] = l2_reg
+            losses['total'] += l2_weights * l2_reg
+
+        # inf norm on autoencoder error and one prediction step
+        # TODO: same as above
+        inf_weight = eval(self.weights.get("inf_norm", 0))
+        if inf_weight > 0:
+            inf = float("inf")
+            Linf1_penalty = torch.norm(torch.norm(y[0] - inputs[0, :, :], p=inf), p=inf)
+            Linf2_penalty = torch.norm(torch.norm(y[1] - inputs[1, :, :], p=inf), p=inf)
+            losses['inf_loss'] = (Linf1_penalty + Linf2_penalty)
+            losses['total'] += inf_weight * losses['inf_loss']
 
         return losses
