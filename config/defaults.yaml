@@ -11,27 +11,7 @@
 # -----  DATA  -----
 # ------------------
 
-data_folder:
-  discrete: ./datasets/DiscreteSpectrumExample
-  pendulum: ./datasets/Pendulum
-  fluidbox: ./datasets/FluidFlowBox
-  attractor: ./datasets/FluidFlowOnAttractor
-
-dataset_type:
-  discrete: koopman
-  pendulum: koopman
-  fluidbox: koopman
-  attractor: koopman
-  density: density
-
-sequence_length:
-  discrete: 51
-  pendulum: 51
-  fluidbox: 101
-  attractor: 121
-
-delta_t:
-  discrete: 0.02
+dataset_type: koopman
 
 # -------------------
 # -----  MODEL  -----

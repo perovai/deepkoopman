@@ -1,0 +1,3 @@
+data_folder: ./datasets/DiscreteSpectrumExample
+sequence_length: 51
+delta_t: 0.02
