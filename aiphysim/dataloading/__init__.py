@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 from .density_dataset import DensityDataset
 from .koopman_dataset import KoopmanDataset
-
+from .dataloader_spacetime import RB2DataLoader
 
 def create_datasets(
     path, sequence_length, dataset_type="koopman", train_lim=-1, val_lim=-1, test_lim=-1
@@ -29,6 +29,9 @@ def create_datasets(
             "train": DensityDataset(train_files, train_lim),
             "val": DensityDataset(val_files, val_lim),
         }
+
+    if dataset_type == "spacetime":
+        raise NotImplementedError()
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
 
