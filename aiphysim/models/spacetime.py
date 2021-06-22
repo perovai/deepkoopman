@@ -2,5 +2,5 @@ import torch.nn as nn
 
 
 class SpaceTime(nn.Module):
-    def __init__(self):
+    def __init__(self, opts):
         pass
