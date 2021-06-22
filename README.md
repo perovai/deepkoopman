@@ -177,3 +177,4 @@ I've had a look at some recent papers on ML method for schemical and open quantu
 * [VAMPNets](https://www.nature.com/articles/s41467-017-02388-1)
 * [Kindof basic-seeming approach](https://www.sciencedirect.com/science/article/pii/S0301010418304336?casa_token=f52aa7YsslYAAAAA:8XG5IfnhslZd_SF38mlnOvsuhyaOo3y7dry1ocXH1uaEbONSZGaTAP2tsBor6dT6K96KKViLWR0)
 * [Nice review from the molecular kinetics point of view](https://pubs.acs.org/doi/full/10.1021/acs.chemrev.0c01195)
+* [Good work on density matrix representation](https://arxiv.org/abs/1103.4542)
