@@ -125,6 +125,8 @@ batch = trainer.dev_batch()
 outputs = trainer.model(batch)
 ```
 
+cool line
+
 ## Misc
 
 * data in the original code is of shape `(num_shift + 1, batch, dim)` where `num_shifts` is `number of shifts (time steps) that losses will use (maximum is len_time - 1)`
