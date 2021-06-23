@@ -16,6 +16,7 @@ data_folder:
   pendulum: ./datasets/Pendulum
   fluidbox: ./datasets/FluidFlowBox
   attractor: ./datasets/FluidFlowOnAttractor
+  spacetime: ./datasets
 
 dataset_type:
   discrete: koopman
