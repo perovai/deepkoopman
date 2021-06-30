@@ -58,6 +58,7 @@ regex==2021.4.4
 requests==2.25.1
 requests-toolbelt==0.9.1
 semantic-version==2.8.5
+scipy
 six==1.16.0
 toml==0.10.2
 torch==1.8.1
