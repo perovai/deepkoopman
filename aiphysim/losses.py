@@ -1,9 +1,7 @@
-import torch
-import numpy as np
-
-import torch
-import numpy as np
 import traceback as tb
+
+import numpy as np
+import torch
 
 
 class BaseLoss:

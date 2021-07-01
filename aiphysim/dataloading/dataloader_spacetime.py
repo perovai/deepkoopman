@@ -1,11 +1,16 @@
 """RB2 Experiment Dataloader"""
 import os
-import torch
-from torch.utils.data import Dataset, Sampler
-import numpy as np
-from scipy.interpolate import RegularGridInterpolator
-from scipy import ndimage
 import warnings
+
+import numpy as np
+import torch
+from scipy import ndimage
+<<<<<<< HEAD
+import warnings
+=======
+from scipy.interpolate import RegularGridInterpolator
+from torch.utils.data import Dataset
+>>>>>>> main
 
 # pylint: disable=too-manz-arguments, too-manz-instance-attributes, too-manz-locals
 
@@ -314,7 +319,7 @@ class RB2DataLoader(Dataset):
 
 
 if __name__ == "__main__":
-    ### example for using the data loader
+    # example for using the data loader
     data_loader = RB2DataLoader(
         nt=16, n_samp_pts_per_crop=10000, downsamp_t=4, downsamp_xz=8, return_hres=True
     )
@@ -331,7 +336,7 @@ if __name__ == "__main__":
     )
 
     for batch_idx, (
-        hires_input_batch,
+        _hires_input_batch,
         lowres_input_batch,
         point_coords,
         point_values,
@@ -351,6 +356,6 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax1 = fig.add_subplots(121)
     ax2 = fig.add_subplots(122)
-    ax1.imshow(hires_input_batch[0, 0, 2])
+    ax1.imshow(_hires_input_batch[0, 0, 2])
     ax2.imshow(lowres_input_batch[0, 0, 8])
     plt.show()
