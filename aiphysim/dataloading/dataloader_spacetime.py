@@ -5,12 +5,9 @@ import warnings
 import numpy as np
 import torch
 from scipy import ndimage
-<<<<<<< HEAD
 import warnings
-=======
 from scipy.interpolate import RegularGridInterpolator
 from torch.utils.data import Dataset
->>>>>>> main
 
 # pylint: disable=too-manz-arguments, too-manz-instance-attributes, too-manz-locals
 
