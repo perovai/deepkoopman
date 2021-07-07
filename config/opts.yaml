@@ -183,3 +183,6 @@ val_trajectories:
   n: 20 # number of validation trajectories to plot
   length: -1 # validation trajectory length ; <0 => seq. len.
   n_per_plot: 10
+
+  metric_type:
+    spacetime: spacetime
