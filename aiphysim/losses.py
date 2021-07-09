@@ -5,11 +5,18 @@ import torch
 
 
 class BaseLoss:
-    def __init__(self, opts):
-        self.weights = {name: float(weight) for name, weight in opts.weights.items()}
+    def __init__(self, opts, is_loss=False):
+        self.weights = (
+            {name: float(weight) for name, weight in opts.weights.items()}
+            if is_loss
+            else None
+        )
         self.loss_funcs = {
-            loss_name: getattr(BaseLoss, loss_name) for loss_name in opts.losses
+            loss_name: getattr(BaseLoss, loss_name)
+            for loss_name in (opts.losses if is_loss else opts.metrics)
         }
+        self.is_loss = is_loss
+
         self.shifts = np.arange(opts.num_shifts) + 1
         self.middle_shifts = np.arange(opts.num_shifts_middle) + 1
 
@@ -56,16 +63,31 @@ class BaseLoss:
             l2_reg += torch.norm(param)
         return l2_reg
 
+    @staticmethod
+    def time_mse(targets, predictions):
+        """
+        Assumes batch x time x [...others]
+
+        Returns average mse per time step across batch and other dimensions
+        """
+        mse = torch.nn.functional.mse_loss(predictions, targets, reduction="none")
+        return torch.transpose(mse, 1, 0).reshape(mse.shape[1], -1).mean(-1)
+
     def compute(self, *args):
         self.set_args(*args)
 
-        losses = {"total": 0.0}
+        losses = {}
+
+        if self.is_loss:
+            losses["total"] = 0.0
 
         for name, loss in self.loss_funcs.items():
             if name in self.args:
                 try:
                     losses[name] = loss(*self.args[name])
-                    losses["total"] += float(self.weights.get(name, 1)) * losses[name]
+                    if self.is_loss:
+                        weight = float(self.weights.get(name, 1))
+                        losses["total"] += losses[name] * weight
                 except Exception as e:
                     print(
                         "Error in loss", name, "with weight", self.weights.get(name, 1)
@@ -95,9 +117,38 @@ class KoopmanLoss(BaseLoss):
         }
 
 
-def get_loss(opts):
-    loss_type = opts.get("loss_type")
-    if loss_type == "koopman":
-        return KoopmanLoss(opts)
+class SpaceTimeLoss(BaseLoss):
+    def set_args(self, inputs, predictions, model):
 
-    raise ValueError("Unknown loss type: " + str(loss_type))
+        self.args = {
+            # TODO
+        }
+
+
+class SpaceTimeMetrics(BaseLoss):
+    def set_args(self, inputs, predictions, model):
+
+        self.args = {
+            # TODO
+        }
+
+
+def get_loss_and_metrics(opts):
+    loss_type = opts.get("loss_type")
+    metrics_type = opts.get("metrics_type")
+
+    loss = metrics = None
+
+    if loss_type == "koopman":
+        loss = KoopmanLoss(opts)
+    elif loss_type == "spacetime":
+        loss = SpaceTimeLoss(opts)
+    else:
+        raise ValueError("Unknown loss type: " + str(loss_type))
+
+    if metrics_type == "spacetime":
+        metrics = SpaceTimeMetrics(opts, True)
+    else:
+        raise ValueError("Unknown loss type: " + str(metrics_type))
+
+    return loss, metrics
