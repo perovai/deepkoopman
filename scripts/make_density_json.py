@@ -41,10 +41,10 @@ if __name__ == "__main__":
     train_idx = int(train_split * len(data_files))
 
     train_jfiles = {
-        data_files[k]: label_file(data_files[k]) for k in tqdm(perm[:train_idx])
+        str(data_files[k]): label_file(data_files[k]) for k in tqdm(perm[:train_idx])
     }
     val_jfiles = {
-        data_files[k]: label_file(data_files[k]) for k in tqdm(perm[train_idx:])
+        str(data_files[k]): label_file(data_files[k]) for k in tqdm(perm[train_idx:])
     }
 
     train_out = out.parent / f"train_{out.name}"
