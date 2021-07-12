@@ -44,7 +44,7 @@ class DatDensityDataset(Dataset):
         return {
             "data": dat_to_array(self.paths[index]),
             "labels": self.labels[self.paths[index]],
-            "path": self.paths[index],
+            "path": str(self.paths[index]),
         }
 
 

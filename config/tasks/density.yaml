@@ -1,2 +1,3 @@
 data_folder: /network/tmp1/schmidtv/perovai
 dataset_type: datdensity
+batch_size: 32
