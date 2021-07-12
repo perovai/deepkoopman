@@ -71,7 +71,7 @@ def load_opts(defaults="./config/defaults.yaml", task=None, task_yaml=None):
         aiphysim.Opts: dot-accessible dict
     """
     p = resolve(defaults)
-    print("Loading parameters from {}".format(str(p)))
+    print("Loading default parameters from {}".format(str(p)))
     with p.open("r") as f:
         all_params = safe_load(f)
 
@@ -91,6 +91,8 @@ def load_opts(defaults="./config/defaults.yaml", task=None, task_yaml=None):
         )
     else:
         task_yaml = resolve(task_yaml)
+
+    print("Updating default parameters from {}".format(str(task_yaml)))
 
     with task_yaml.open("r") as f:
         task_params = yaml.safe_load(f)
