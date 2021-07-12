@@ -11,8 +11,6 @@ from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
 
-from aiphysim.opts import Opts
-
 COMET_KWARGS = {
     "auto_metric_logging": False,
     "parse_args": True,
@@ -68,7 +66,7 @@ def load_opts(defaults="./config/defaults.yaml", task=None, task_yaml=None):
     Load opts from a yaml config for a specific task
 
     Returns:
-        aiphysim.Opts: dot-accessible dict
+        addict.Dict: dot-accessible dict
     """
     p = resolve(defaults)
     print("Loading default parameters from {}".format(str(p)))
@@ -99,7 +97,7 @@ def load_opts(defaults="./config/defaults.yaml", task=None, task_yaml=None):
 
     all_params.update(task_params)
 
-    return Opts(all_params)
+    return Dict(all_params)
 
 
 def new_unique_path(path):
@@ -185,7 +183,7 @@ def get_optimizer(opts, model):
     return optimizer, scheduler
 
 
-def upload_code_and_parameters(exp: Experiment, opts: Opts):
+def upload_code_and_parameters(exp: Experiment, opts: Dict):
     # code
     py_files = []
     py_files += list(Path(__file__).resolve().parent.parent.glob("./*.py"))

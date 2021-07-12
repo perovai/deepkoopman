@@ -2,11 +2,10 @@ import json
 import sys
 from pathlib import Path
 
-from minydra import Parser
 import numpy as np
-from tqdm import tqdm
-
+from minydra import Parser
 from subsample_density_dataset import label_file
+from tqdm import tqdm
 
 if __name__ == "__main__":
 
