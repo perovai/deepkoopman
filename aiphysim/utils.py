@@ -63,37 +63,41 @@ def resolve(path):
     return Path(expandvars(str(path))).expanduser().resolve()
 
 
-def load_opts(path="./config/opts.yaml", task=None, known_tasks=KNOWN_TASKS):
+def load_opts(defaults="./config/defaults.yaml", task=None, task_yaml=None):
     """
     Load opts from a yaml config for a specific task
 
     Returns:
         aiphysim.Opts: dot-accessible dict
     """
-    p = resolve(path)
+    p = resolve(defaults)
     print("Loading parameters from {}".format(str(p)))
     with p.open("r") as f:
         all_params = safe_load(f)
 
-    if task is None:
-        if "task" not in all_params:
-            raise ValueError("No task provided or in the opts yaml file")
-        task = all_params["task"]
-    else:
-        all_params["task"] = task
-
-    params = {}
-    for key, value in all_params.items():
-        if isinstance(value, dict):
-            if any(k in known_tasks for k in value):
-                if task in value:
-                    params[key] = value[task]
-            else:
-                params[key] = value
+    if task_yaml is None:
+        if task is None:
+            if "task" not in all_params:
+                raise ValueError("No task or task_yaml provided")
+            task = all_params["task"]
         else:
-            params[key] = value
+            all_params["task"] = task
 
-    return Opts(params)
+        task_yaml = (
+            Path(__file__).parent.parent
+            / "config"
+            / "tasks"
+            / f'{all_params["task"]}.yaml'
+        )
+    else:
+        task_yaml = resolve(task_yaml)
+
+    with task_yaml.open("r") as f:
+        task_params = yaml.safe_load(f)
+
+    all_params.update(task_params)
+
+    return Opts(all_params)
 
 
 def new_unique_path(path):

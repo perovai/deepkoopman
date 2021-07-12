@@ -23,7 +23,9 @@ if __name__ == "__main__":
     args = Opts(args)
 
     opts = load_opts(
-        args.get("yaml", "./config/opts.yaml"), args.get("task", "discrete")
+        defaults=args.get("yaml", "./config/defaults.yaml"),
+        task=args.get("task", "discrete"),
+        task_yaml=args.get("task_yaml"),
     )
     opts.update(args)
     opts.output_path = make_output_dir(opts.output_path, dev=opts.get("dev"))
