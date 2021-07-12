@@ -1,7 +1,7 @@
 import minydra
 from comet_ml import Experiment
+from addict import Dict
 
-from aiphysim.opts import Opts
 from aiphysim.trainer import Trainer
 from aiphysim.utils import (
     COMET_KWARGS,
@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     if args:
         args.pretty_print()
-    args = Opts(args)
+    args = Dict(args)
 
     opts = load_opts(
         defaults=args.get("yaml", "./config/defaults.yaml"),

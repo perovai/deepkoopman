@@ -2,12 +2,12 @@ import numpy as np
 import torch
 from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
+from addict import Dict
 
 from aiphysim.dataloading import create_dataloaders
 from aiphysim.logger import Logger
 from aiphysim.losses import get_loss_and_metrics
 from aiphysim.models import create_model
-from aiphysim.opts import Opts
 from aiphysim.plots import plot_2D_comparative_trajectories
 from aiphysim.utils import (
     COMET_KWARGS,
@@ -47,7 +47,7 @@ class Trainer:
         assert opts_path.exists()
         opts = load_opts(opts_path)
         breakpoint()
-        if isinstance(overrides, (Opts, dict)):
+        if isinstance(overrides, (Dict, dict)):
             opts.update(overrides)
 
         if exp_type == "new":
