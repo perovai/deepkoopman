@@ -12,36 +12,40 @@ class DatDensityDataset(Dataset):
     def __init__(self, json_files, limit=-1, force_rebase=None) -> None:
         super().__init__()
 
-        self.paths = {}
+        self.labels = {}
 
         for json_file in json_files:
             with open(json_file, "r") as f:
-                self.paths.update({Path(k): v for k, v in json.load(f).items()})
-            if limit > 0 and len(self.paths) > limit:
+                self.labels.update({Path(k): v for k, v in json.load(f).items()})
+            if limit > 0 and len(self.labels) > limit:
                 break
 
-        self.keys = list(self.paths.keys())
+        self.paths = list(self.labels.keys())
 
         if limit > 0:
-            self.keys = self.keys[:limit]
-            self.paths = {k: self.paths[k] for k in self.keys}
+            self.paths = self.paths[:limit]
+            self.labels = {k: self.labels[k] for k in self.paths}
 
         if force_rebase is not None:
             assert isinstance(force_rebase, dict)
             assert "from" in force_rebase
             assert "to" in force_rebase
 
-            self.paths = {
+            self.labels = {
                 Path(force_rebase["to"]) / k.relative_to(force_rebase["from"]): v
-                for k, v in self.paths.items()
+                for k, v in self.labels.items()
             }
-            self.keys = list(self.paths.keys())
+            self.paths = list(self.labels.keys())
 
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, index):
-        return dat_to_array(self.paths[self.keys[index]])
+        return {
+            "data": dat_to_array(self.paths[index]),
+            "labels": self.labels[self.paths[index]],
+            "path": self.paths[index],
+        }
 
 
 class H5DensityDataset(Dataset):
