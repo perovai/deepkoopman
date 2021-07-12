@@ -1,4 +1,3 @@
-import ast
 import sys
 from pathlib import Path
 
@@ -8,19 +7,7 @@ import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from aiphysim.utils import new_unique_path, resolve  # noqa: E402
-
-
-def dat_to_array(fname, shape=3):
-    with resolve(fname).open("r") as f:
-        lines = f.readlines()
-    values = [list(map(ast.literal_eval, line.strip().split())) for line in lines]
-    matrix = [
-        [v for value_tuple in tuple_list for v in value_tuple] for tuple_list in values
-    ]
-    array = np.array(matrix)
-
-    return np.reshape(array, (-1, shape, array.shape[-1]))
+from aiphysim.utils import dat_to_array, new_unique_path, resolve  # noqa: E402
 
 
 def label_file(file_path, delay_fs=0.2):

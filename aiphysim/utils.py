@@ -1,7 +1,9 @@
+import ast
 import os
 from os.path import expandvars
 from pathlib import Path
 
+import numpy as np
 import torch
 import yaml
 from addict import Dict
@@ -274,3 +276,15 @@ def clean_checkpoints(path, n_max=5):
 
     sorted_ckpts = sorted(ckpts, key=lambda c: float(c.stem.split("loss_")[-1]))
     os.remove(sorted_ckpts[-1])
+
+
+def dat_to_array(fname, shape=3):
+    with resolve(fname).open("r") as f:
+        lines = f.readlines()
+    values = [list(map(ast.literal_eval, line.strip().split())) for line in lines]
+    matrix = [
+        [v for value_tuple in tuple_list for v in value_tuple] for tuple_list in values
+    ]
+    array = np.array(matrix)
+
+    return np.reshape(array, (-1, shape, array.shape[-1]))
