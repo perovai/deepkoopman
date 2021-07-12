@@ -1,11 +1,9 @@
-import numpy as np
-import torch
 import torch.nn as nn
 
 
 class Encoder(nn.Module):
     def __init__(self, opts):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.input_dim = opts.input_dim
         self.output_dim = opts.latent_dim
         widths = opts.encoder_widths
@@ -23,7 +21,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(self, opts):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.input_dim = opts.latent_dim
         self.output_dim = opts.input_dim
         widths = opts.encoder_widths[::-1]
@@ -41,6 +39,7 @@ class Decoder(nn.Module):
 
 class Latent(nn.Module):
     def __init__(self, opts):
+        super().__init__()
         self.opts = opts
 
     # TODO
@@ -48,6 +47,8 @@ class Latent(nn.Module):
 
 class DynamicLatentModel(nn.Module):
     def __init__(self, opts):
+        super().__init__()
+
         self.opts = opts
 
         self.encoder = Encoder(opts)
