@@ -11,7 +11,7 @@ from subsample_density_dataset import label_file
 if __name__ == "__main__":
 
     parser = Parser()
-    args = parser.parse_args().resolve()
+    args = parser.args.resolve()
 
     base = Path("/network/tmp1/schmidtv/perovai")
     out = Path("/network/tmp1/schmidtv/perovai/labeled_data_paths.json")
