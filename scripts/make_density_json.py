@@ -6,7 +6,7 @@ from minydra import Parser
 import numpy as np
 from tqdm import tqdm
 
-from .subsample_density_dataset import label_file
+from subsample_density_dataset import label_file
 
 if __name__ == "__main__":
 

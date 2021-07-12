@@ -2,7 +2,7 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
-from .density_dataset import DensityDataset
+from .density_dataset import H5DensityDataset
 from .koopman_dataset import KoopmanDataset
 
 
@@ -26,8 +26,8 @@ def create_datasets(
         val_files = list(Path(path).glob("val_*.h5"))
 
         return {
-            "train": DensityDataset(train_files, train_lim),
-            "val": DensityDataset(val_files, val_lim),
+            "train": H5DensityDataset(train_files, train_lim),
+            "val": H5DensityDataset(val_files, val_lim),
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
