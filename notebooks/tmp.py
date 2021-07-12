@@ -1,13 +1,8 @@
 import sys
 
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib import cm
-
 sys.path.append("../")
-from aiphysim.opts import Opts
-from aiphysim.trainer import Trainer
-from aiphysim.utils import load_opts, make_output_dir, resolve
+from aiphysim.trainer import Trainer  # noqa: E402
+from aiphysim.utils import load_opts, make_output_dir  # noqa: E402
 
 opts = load_opts("../config/opts.yaml", "discrete")
 opts.output_path = make_output_dir(opts.output_path, dev=False)

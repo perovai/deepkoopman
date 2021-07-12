@@ -3,12 +3,12 @@ import sys
 from pathlib import Path
 
 import h5py
+import minydra
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-import minydra
 
-from aiphysim.utils import new_unique_path, resolve
+from aiphysim.utils import new_unique_path, resolve  # noqa: E402
 
 
 def dat_to_array(fname, shape=3):
