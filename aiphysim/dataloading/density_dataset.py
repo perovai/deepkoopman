@@ -3,6 +3,7 @@ from pathlib import Path
 
 import h5py
 import torch
+import numpy as np
 from torch.utils.data import Dataset
 
 from aiphysim.utils import dat_to_array
@@ -42,7 +43,9 @@ class DatDensityDataset(Dataset):
 
     def __getitem__(self, index):
         return {
-            "data": dat_to_array(self.paths[index]),
+            "data": torch.from_numpy(
+                dat_to_array(self.paths[index]).astype(np.float32)
+            ),
             "labels": self.labels[self.paths[index]],
             "path": str(self.paths[index]),
         }
