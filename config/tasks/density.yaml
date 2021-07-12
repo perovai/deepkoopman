@@ -1,3 +1,7 @@
 data_folder: /network/tmp1/schmidtv/perovai
 dataset_type: datdensity
 batch_size: 32
+density_matrix_shape: [3, 6]
+input_dim: 18
+latent_dim: 6
+encoder_widths: [128, 128, 128] # (input x width, ..., width x latent_dim)
