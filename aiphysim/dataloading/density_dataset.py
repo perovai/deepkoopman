@@ -1,5 +1,7 @@
 import json
 
+from pathlib import Path
+
 import h5py
 import torch
 from torch.utils.data import Dataset
@@ -8,17 +10,33 @@ from aiphysim.utils import dat_to_array
 
 
 class DatDensityDataset(Dataset):
-    def __init__(self, json_file, limit=-1) -> None:
+    def __init__(self, json_files, limit=-1, force_rebase=None) -> None:
         super().__init__()
 
-        with open(json_file, "r") as f:
-            self.paths = json.load(f)
+        self.paths = {}
+
+        for json_file in json_files:
+            with open(json_file, "r") as f:
+                self.paths.update({Path(k): v for k, v in json.load(f).items()})
+            if limit > 0 and len(self.paths) > limit:
+                break
 
         self.keys = list(self.paths.keys())
 
         if limit > 0:
             self.keys = self.keys[:limit]
             self.paths = {k: self.paths[k] for k in self.keys}
+
+        if force_rebase is not None:
+            assert isinstance(force_rebase, dict)
+            assert "from" in force_rebase
+            assert "to" in force_rebase
+
+            self.paths = {
+                Path(force_rebase["to"]) / k.relative_to(force_rebase["from"]): v
+                for k, v in self.paths.items()
+            }
+            self.keys = list(self.paths.keys())
 
     def __len__(self):
         return len(self.paths)

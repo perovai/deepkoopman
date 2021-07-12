@@ -15,20 +15,28 @@ if __name__ == "__main__":
 
     base = Path("/network/tmp1/schmidtv/perovai")
     out = Path("/network/tmp1/schmidtv/perovai/labeled_data_paths.json")
+    train_out = out.parent / f"train_{out.name}"
+    val_out = out.parent / f"val_{out.name}"
     train_split = 0.8
 
     if "base" in args:
         base = Path(args.base).expanduser().resolve()
     if "out" in args:
         out = Path(args.out).expanduser().resolve()
-        if out.exists():
-            print(str(out), "already exists")
+        train_out = out.parent / f"train_{out.name}"
+        val_out = out.parent / f"val_{out.name}"
+        if train_out.exists():
+            print(str(train_out), "already exists")
+            if "y" not in input("Continue? [y/n]"):
+                sys.exit()
+        if val_out.exists():
+            print(str(val_out), "already exists")
             if "y" not in input("Continue? [y/n]"):
                 sys.exit()
     if "train_split" in args:
         train_split = float(args.train_split)
 
-    assert out.parent.exists()
+    assert train_out.parent.exists()
 
     print("Using base discovery path", str(base))
     print("Using output json", str(out))
@@ -46,9 +54,6 @@ if __name__ == "__main__":
     val_jfiles = {
         str(data_files[k]): label_file(data_files[k]) for k in tqdm(perm[train_idx:])
     }
-
-    train_out = out.parent / f"train_{out.name}"
-    val_out = out.parent / f"val_{out.name}"
 
     with train_out.open("w") as f:
         json.dump(train_jfiles, f)

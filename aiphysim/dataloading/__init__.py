@@ -2,12 +2,18 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
-from .density_dataset import H5DensityDataset
+from .density_dataset import H5DensityDataset, DatDensityDataset
 from .koopman_dataset import KoopmanDataset
 
 
 def create_datasets(
-    path, sequence_length, dataset_type="koopman", train_lim=-1, val_lim=-1, test_lim=-1
+    path,
+    sequence_length,
+    dataset_type="koopman",
+    force_rebase=None,
+    train_lim=-1,
+    val_lim=-1,
+    test_lim=-1,
 ):
     if dataset_type == "koopman":
         print("Creating datasets from ", str(path))
@@ -21,13 +27,22 @@ def create_datasets(
             "test": KoopmanDataset(test_files, sequence_length, test_lim),
         }
 
-    if dataset_type == "density":
+    if dataset_type == "h5density":
         train_files = list(Path(path).glob("train_*.h5"))
         val_files = list(Path(path).glob("val_*.h5"))
 
         return {
             "train": H5DensityDataset(train_files, train_lim),
             "val": H5DensityDataset(val_files, val_lim),
+        }
+
+    if dataset_type == "datdensity":
+        train_files = list(Path(path).glob("train_*.json"))
+        val_files = list(Path(path).glob("val_*.json"))
+
+        return {
+            "train": DatDensityDataset(train_files, train_lim, force_rebase),
+            "val": DatDensityDataset(val_files, val_lim, force_rebase),
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
@@ -56,10 +71,17 @@ def create_dataloaders(opts):
     batch_size = opts.batch_size
     dataset_type = opts.dataset_type
     workers = opts.workers
+    force_rebase = opts.get("force_rebase")
 
     path = Path(path).expanduser().resolve()
     datasets = create_datasets(
-        path, sequence_length, dataset_type, lims["train"], lims["val"], lims["test"]
+        path,
+        sequence_length,
+        dataset_type,
+        force_rebase,
+        lims["train"],
+        lims["val"],
+        lims["test"],
     )
     return {
         k: DataLoader(

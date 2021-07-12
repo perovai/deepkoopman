@@ -1,2 +1,2 @@
-data_folder: ./datasets/Density
-dataset_type: density
+data_folder: /network/tmp1/schmidtv/perovai
+dataset_type: datdensity
