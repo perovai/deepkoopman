@@ -72,7 +72,7 @@ class DynamicLatentModel(nn.Module):
         self.latent = Latent(opts)
         self.density_matrix_shape = opts.density_matrix_shape
 
-        self.flatten = nn.Flatten()
+        self.flatten = nn.Flatten(-2, -1)
         self.unflatten = nn.Unflatten(1, tuple(self.density_matrix_shape))
 
     def encode(self, x):
@@ -99,14 +99,11 @@ class DynamicLatentModel(nn.Module):
         return latents, decoded
 
     def one_step_predictions(self, ts):
-        b, t, d = ts.shape
-        ts = ts.reshape((-1, d))
         encoded_ts = self.encode(ts)
-        encoded_ts = encoded_ts.reshape((b, t, d))
         _, next_zs = self.latent(encoded_ts)
-        next_zs = next_zs.reshape((-1, d))
-        decoded_ts = self.decode(next_zs)
-        return decoded_ts.reshape((b, t, d))
+        next_decoded_ts = self.decode(next_zs)
+        return encoded_ts, next_zs, next_decoded_ts
 
-    def forward(self, time_series):
+    def forward(self, batch, device="cpu"):
+        time_series = batch["data"].to(device)
         return self.one_step_predictions(time_series)

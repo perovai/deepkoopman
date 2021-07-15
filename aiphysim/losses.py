@@ -81,16 +81,38 @@ class BaseLoss:
         if self.is_loss:
             losses["total"] = 0.0
 
-        for name, loss in self.loss_funcs.items():
-            if name in self.args:
+        for loss_params in self.args:
+
+            # args are
+            #
+            # (function_type, tuple(args))
+            # or
+            # (function_type, function_name, tuple(args))
+            #
+            # function_name is used to differentiate 2 identical losses
+            # applied to different inputs
+
+            if len(loss_params) == 3:
+                loss_func, loss_name, loss_args = loss_params
+            else:
+                loss_func, loss_args = loss_params
+                loss_name = loss_func
+
+            if hasattr(self, loss_func):
                 try:
-                    losses[name] = loss(*self.args[name])
+                    loss = getattr(self, loss_func)
+                    losses[loss_name] = loss(*loss_args)
                     if self.is_loss:
-                        weight = float(self.weights.get(name, 1))
-                        losses["total"] += losses[name] * weight
+                        weight = float(self.weights.get(loss_func, 1))
+                        losses["total"] += losses[loss_func] * weight
                 except Exception as e:
                     print(
-                        "Error in loss", name, "with weight", self.weights.get(name, 1)
+                        "Error in loss",
+                        loss_name,
+                        "for func",
+                        loss_func,
+                        "with weight",
+                        self.weights.get(loss_func, 1),
                     )
                     print("\n" + tb.format_exc())
                     raise Exception(e)
@@ -115,6 +137,25 @@ class KoopmanLoss(BaseLoss):
             "l2": (model,),
             "inf_norm": (inputs, y),
         }
+
+
+class DensityLoss(BaseLoss):
+    def set_args(self, batch, predictions, model):
+        """
+        Compute the weighted loss with respect to targets and predictions
+
+        Args:
+            targets (dict): dictionnary of target values
+            predictions (dict): dictionnary of predicted values
+        """
+        encoded_ts, next_zs, next_decoded_ts = predictions
+        time_series = batch["data"].to(predictions.device)
+
+        self.args = [
+            ("l2", (model,)),
+            ("time_mse", "time_mse_latent", (encoded_ts[1:], next_zs[:-1])),
+            ("time_mse", "time_mse_decoded", (time_series[1:], next_decoded_ts[:-1])),
+        ]
 
 
 class SpaceTimeLoss(BaseLoss):

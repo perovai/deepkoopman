@@ -186,10 +186,9 @@ class Trainer:
         """
         self.optimizer.zero_grad()
 
-        state = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
-        predictions = self.model.forward(state)
+        predictions = self.model.forward(batch, self.device)
 
-        train_losses = self.losses.compute(state, predictions, self.model)
+        train_losses = self.losses.compute(batch, predictions, self.model)
         train_losses["total"].backward()
 
         self.optimizer.step()

@@ -10,3 +10,8 @@ encoder_widths: [128, 128, 128] # (input x width, ..., width x latent_dim)
 
 latent_hidden_size: 128
 latent_num_layers: 2
+
+loss_type: density
+losses:
+  - l2
+  - time_mse

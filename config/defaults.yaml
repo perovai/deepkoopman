@@ -76,7 +76,7 @@ latent_dim:
   fluidbox: 3
   attractor: 3
 
-loss_type: koopman # loss processing scheme
+loss_type: <PLACEHOLDER> # loss processing scheme
 
 losses: # individual loss functions to use
   discrete:
