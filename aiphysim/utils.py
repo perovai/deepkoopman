@@ -21,6 +21,8 @@ COMET_KWARGS = {
 
 KNOWN_TASKS = set(["discrete", "pendulum", "fluidbox", "attractor"])
 
+ROOT = Path(__file__).resolve().parent.parent
+
 
 def mem_size(model):
     """
@@ -61,7 +63,7 @@ def resolve(path):
     return Path(expandvars(str(path))).expanduser().resolve()
 
 
-def load_opts(defaults="./config/defaults.yaml", task=None, task_yaml=None):
+def load_opts(defaults=ROOT / "config/defaults.yaml", task=None, task_yaml=None):
     """
     Load opts from a yaml config for a specific task
 
