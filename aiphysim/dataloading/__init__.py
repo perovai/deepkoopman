@@ -2,6 +2,7 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
+from .dataloader_spacetime import RB2DataLoader
 from .density_dataset import DensityDataset
 from .koopman_dataset import KoopmanDataset
 
@@ -28,6 +29,16 @@ def create_datasets(
         return {
             "train": DensityDataset(train_files, train_lim),
             "val": DensityDataset(val_files, val_lim),
+        }
+
+    if dataset_type == "spacetime":
+        # Sample dataset for setting up code
+        train_files = list(Path(path).glob("snapshots_s1_p0.h5"))
+
+        return {
+            "train": RB2DataLoader(
+                train_files, train_lim
+            ),  # Class from implementation of Meshfree Flow Net paper
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
