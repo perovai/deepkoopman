@@ -3,7 +3,6 @@ import os
 
 import h5py
 import numpy as np
-import torch
 from torch.utils.data import Dataset
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes, too-many-locals
