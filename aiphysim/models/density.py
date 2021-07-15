@@ -42,7 +42,23 @@ class Latent(nn.Module):
         super().__init__()
         self.opts = opts
 
-    # TODO
+        input_size = opts.latent_dim
+        hidden_size = opts.latent_hidden_size
+        num_layers = opts.latent_num_layers
+        dropout = opts.dropout
+
+        self.lstm = nn.LSTM(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            dropout=dropout,
+            batch_first=True,
+        )
+
+    def forward(self, z):
+        if z.ndim == 2:
+            z.unsqueeze_(1)
+        return self.lstm(z)
 
 
 class DynamicLatentModel(nn.Module):
@@ -69,14 +85,28 @@ class DynamicLatentModel(nn.Module):
         return self.unflatten(y)
 
     def next_z(self, z):
-        return z
-        # return self.latent(z)
+        last, _ = self.latent(z)
+        return last
 
-    def evolve(self, x, steps=0):
-        latents = [self.encode(x)]
+    def evolve_from_state(self, state, steps=0):
+        latents = [self.encode(state)]
         decoded = [self.decode(latents[-1])]
-        for s in range(steps):
+        for _ in range(steps):
+            z = latents[-1]
             latents.append(self.next_z(z))
-            decoded.append(self.decode(latents[-1]))
+            decoded.append(self.decode(z))
 
         return latents, decoded
+
+    def one_step_predictions(self, ts):
+        b, t, d = ts.shape
+        ts = ts.reshape((-1, d))
+        encoded_ts = self.encode(ts)
+        encoded_ts = encoded_ts.reshape((b, t, d))
+        _, next_zs = self.latent(encoded_ts)
+        next_zs = next_zs.reshape((-1, d))
+        decoded_ts = self.decode(next_zs)
+        return decoded_ts.reshape((b, t, d))
+
+    def forward(self, time_series):
+        return self.one_step_predictions(time_series)

@@ -146,6 +146,8 @@ optimizer:
   lr: 0.0001
   scheduler: plateau
 
+dropout: 0.3
+
 comet:
   use: true
   project_name: aiphysim
