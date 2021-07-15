@@ -10,6 +10,24 @@ from dedalus.tools import post
 
 logger = logging.getLogger(__name__)
 
+"""
+
+    This script generate a h5 file that contains the spatio-temporal evolution of temperature, pressure and velocity
+    from the 2D rayleigh-bénard convection.
+    Args:
+        lx: float, Physical length in x dimension. (default: 5.0)
+        lz: float, Physical length in z dimension. (default: 1.0)
+        nx: int, number of pixels in x dimension. (default: 128)
+        nz: int, number of pixels in z dimension. (default: 64)
+        dt: float, timestep in seconds between frames in simulation time. (default: 1e-5)
+        stop_sim_time: float, Simulation stop time in seconds. (default: 50)
+        rayleigh: float, Simulation Rayleigh number. (default: 15e4)
+        prandtl: float, Simulation Prandtl number. (default: 5)
+        ampl_noise: float, The amplitude of the noise in the initial conditions. (default: 1e-1)
+        seed: int, The seed for the random noise in the intial conditions. (default: 42)
+        logging_period: int, Each [logging_period] iterations, a log with the solver statistics will be displayed. (default: 10)
+"""
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -41,9 +59,9 @@ def get_args():
     )
     parser.add_argument(
         "--dt",
-        default=1e-5,
+        default=1e-3,
         type=float,
-        help="Simulation time-step size in seconds. (default: 1e-5)",
+        help="Simulation time-step size in seconds. (default: 1e-3)",
     )
     parser.add_argument(
         "--stop_sim_time",
@@ -62,6 +80,12 @@ def get_args():
         default=5,
         type=float,
         help="Simulation Prandtl number. (default: 5)",
+    )
+    parser.add_argument(
+        "--ampl_noise",
+        default=1e-1,
+        type=float,
+        help="Amplitude of the noise in the initial conditions. (default: 1e-1)",
     )
     parser.add_argument(
         "--seed",
@@ -91,7 +115,7 @@ if __name__ == "__main__":
     Prandtl = args.prandtl
     Rayleigh = args.rayleigh
 
-    fname = f"snap_Pr_{Prandtl}_Ra_{int(Rayleigh)}"  # file name where experiments will be stored
+    fname = f"snap_Pr_{Prandtl}_Ra_{int(Rayleigh)}_seed_{args.seed}"  # file name where experiments will be stored
 
     # Create bases and domain
     x_basis = de.Fourier("x", nx, interval=(0, Lx), dealias=3 / 2)
@@ -140,7 +164,7 @@ if __name__ == "__main__":
     noise = rand.standard_normal(gshape)[slices]
     # Linear background + perturbations damped at walls
     zb, zt = z_basis.interval
-    pert = 1e-1 * noise * (zt - z) * (z - zb)
+    pert = args.ampl_noise * noise * (zt - z) * (z - zb)
     T["g"] += pert
     T.differentiate("z", out=Tz)
 

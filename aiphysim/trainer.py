@@ -4,11 +4,11 @@ from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
 
 from aiphysim.dataloading import create_dataloaders
-from aiphysim.eval import plot_2D_comparative_trajectories
 from aiphysim.logger import Logger
-from aiphysim.losses import get_loss
+from aiphysim.losses import get_loss_and_metrics
 from aiphysim.models import create_model
 from aiphysim.opts import Opts
+from aiphysim.plots import plot_2D_comparative_trajectories
 from aiphysim.utils import (
     COMET_KWARGS,
     clean_checkpoints,
@@ -122,7 +122,7 @@ class Trainer:
         print(num_params(self.model))
 
         # create loss util
-        self.losses = get_loss(self.opts)
+        self.losses, self.metrics = get_loss_and_metrics(self.opts)
 
         if not inference_only:
             # create logger to abstract prints away from the main code

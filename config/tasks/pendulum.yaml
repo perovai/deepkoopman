@@ -1,0 +1,2 @@
+data_folder: ./datasets/Pendulum
+sequence_length: 51

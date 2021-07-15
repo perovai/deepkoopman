@@ -11,28 +11,7 @@
 # -----  DATA  -----
 # ------------------
 
-data_folder:
-  discrete: ./datasets/DiscreteSpectrumExample
-  pendulum: ./datasets/Pendulum
-  fluidbox: ./datasets/FluidFlowBox
-  attractor: ./datasets/FluidFlowOnAttractor
-  spacetime: ./datasets
-
-dataset_type:
-  discrete: koopman
-  pendulum: koopman
-  fluidbox: koopman
-  attractor: koopman
-  density: density
-
-sequence_length:
-  discrete: 51
-  pendulum: 51
-  fluidbox: 101
-  attractor: 121
-
-delta_t:
-  discrete: 0.02
+dataset_type: koopman
 
 # -------------------
 # -----  MODEL  -----
@@ -184,3 +163,10 @@ val_trajectories:
   n: 20 # number of validation trajectories to plot
   length: -1 # validation trajectory length ; <0 => seq. len.
   n_per_plot: 10
+
+metric_type:
+  spacetime: spacetime
+
+metrics:
+  spacetime:
+    - time_mse
