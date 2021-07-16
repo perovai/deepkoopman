@@ -101,9 +101,10 @@ class DynamicLatentModel(nn.Module):
 
     def one_step_predictions(self, ts):
         encoded_ts = self.encode(ts)
+        decoded_ts = self.decode(encoded_ts)
         next_zs, _ = self.latent(encoded_ts)
         next_decoded_ts = self.decode(next_zs)
-        return encoded_ts, next_zs, next_decoded_ts
+        return encoded_ts, decoded_ts, next_zs, next_decoded_ts
 
     def forward(self, batch, device="cpu"):
         time_series = batch["data"].to(device)

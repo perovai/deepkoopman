@@ -273,7 +273,7 @@ class Trainer:
             float: validation loss
         """
         self.model.eval()
-        losses = None
+        losses = metrics = None
         print()
         for batch in tqdm(self.loaders["val"]):
             batch = batch.to(self.device)
@@ -282,12 +282,23 @@ class Trainer:
             predictions = self.model.forward(state)
 
             val_losses = self.losses.compute(state, predictions, self.model)
+            val_metrics = self.metrics.compute(state, predictions, self.model)
+
             if losses is None:
                 losses = {k: [] for k in val_losses}
+                metrics = {k: [] for k in val_metrics}
+
             for k, v in val_losses.items():
                 losses[k].append(v)
+            for k, v in val_metrics.items():
+                metrics[k].append(v)
         losses = {k: np.mean([lv.cpu().item() for lv in v]) for k, v in losses.items()}
+        metrics = {
+            k: np.mean([lv.cpu().item() for lv in v]) for k, v in metrics.items()
+        }
+
         self.logger.log_step(losses, mode="val")
+        self.logger.log_step(metrics, mode="val")
         print()
         return losses["total"]
 

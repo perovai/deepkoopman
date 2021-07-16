@@ -21,7 +21,7 @@ class BaseLoss:
         self.middle_shifts = np.arange(opts.num_shifts_middle) + 1
 
     @staticmethod
-    def reconstruction(reconstruction, state):
+    def mse(reconstruction, state):
         return torch.nn.functional.mse_loss(reconstruction, state)
 
     @staticmethod
@@ -131,7 +131,7 @@ class KoopmanLoss(BaseLoss):
         embedding, y, latent_evol = predictions
 
         self.args = {
-            "reconstruction": (inputs[0, :, :], y[0]),
+            "mse": (inputs[0, :, :], y[0]),
             "prediction": (inputs, y, self.shifts),
             "linear": (embedding, latent_evol, self.middle_shifts),
             "l2": (model,),
@@ -141,37 +141,34 @@ class KoopmanLoss(BaseLoss):
 
 class DensityLoss(BaseLoss):
     def set_args(self, batch, predictions, model):
-        """
-        Compute the weighted loss with respect to targets and predictions
 
-        Args:
-            targets (dict): dictionnary of target values
-            predictions (dict): dictionnary of predicted values
-        """
-        encoded_ts, next_zs, next_decoded_ts = predictions
+        encoded_ts, decoded_ts, next_zs, next_decoded_ts = predictions
         time_series = batch["data"].to(predictions.device)
 
         self.args = [
             ("l2", (model,)),
-            ("time_mse", "time_mse_latent", (encoded_ts[1:], next_zs[:-1])),
-            ("time_mse", "time_mse_decoded", (time_series[1:], next_decoded_ts[:-1])),
+            ("mse", "mse_latent", (encoded_ts[1:], next_zs[:-1])),
+            ("mse", "mse_next_decoded", (time_series[1:], next_decoded_ts[:-1])),
+            ("mse", "mse_decoded", (time_series, decoded_ts)),
         ]
 
 
-class SpaceTimeLoss(BaseLoss):
-    def set_args(self, inputs, predictions, model):
+class DensityMetrics(BaseLoss):
+    def set_args(self, batch, predictions, model):
 
-        self.args = {
-            # TODO
-        }
+        self.args = []
+
+
+class SpaceTimeLoss(BaseLoss):
+    def set_args(self, batch, predictions, model):
+
+        self.args = []
 
 
 class SpaceTimeMetrics(BaseLoss):
-    def set_args(self, inputs, predictions, model):
+    def set_args(self, batch, predictions, model):
 
-        self.args = {
-            # TODO
-        }
+        self.args = []
 
 
 def get_loss_and_metrics(opts):
@@ -189,6 +186,8 @@ def get_loss_and_metrics(opts):
 
     if metrics_type == "spacetime":
         metrics = SpaceTimeMetrics(opts, True)
+    elif metrics_type == "density":
+        metrics = DensityMetrics(opts, True)
     else:
         raise ValueError("Unknown loss type: " + str(metrics_type))
 
