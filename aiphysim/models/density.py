@@ -46,9 +46,6 @@ class Latent(nn.Module):
         hidden_size = opts.latent_hidden_size
         num_layers = opts.latent_num_layers
         dropout = opts.dropout
-        latent_dim = opts.latent_dim
-
-        self.proj_layer = nn.Linear(in_features=hidden_size, out_features=latent_dim)
 
         self.lstm = nn.LSTM(
             input_size=input_size,
@@ -56,12 +53,13 @@ class Latent(nn.Module):
             num_layers=num_layers,
             dropout=dropout,
             batch_first=True,
+            proj_size=input_size,
         )
 
     def forward(self, z):
         if z.ndim == 2:
             z.unsqueeze_(1)
-        return self.proj_layer(self.lstm(z))
+        return self.lstm(z)
 
 
 class DynamicLatentModel(nn.Module):
