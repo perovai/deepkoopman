@@ -74,7 +74,7 @@ class DynamicLatentModel(nn.Module):
         self.density_matrix_shape = opts.density_matrix_shape
 
         self.flatten = nn.Flatten(-2, -1)
-        self.unflatten = nn.Unflatten(1, tuple(self.density_matrix_shape))
+        self.unflatten = nn.Unflatten(-1, tuple(self.density_matrix_shape))
 
     def encode(self, x):
         x = self.flatten(x)
