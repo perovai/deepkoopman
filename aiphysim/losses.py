@@ -103,7 +103,7 @@ class BaseLoss:
                     loss = getattr(self, loss_func)
                     losses[loss_name] = loss(*loss_args)
                     if self.is_loss:
-                        weight = float(self.weights.get(loss_func, 1))
+                        weight = float(self.weights.get(loss_name, 1))
                         losses["total"] += losses[loss_func] * weight
                 except Exception as e:
                     print(
@@ -112,7 +112,7 @@ class BaseLoss:
                         "for func",
                         loss_func,
                         "with weight",
-                        self.weights.get(loss_func, 1),
+                        self.weights.get(loss_name, 1),
                     )
                     print("\n" + tb.format_exc())
                     raise Exception(e)
