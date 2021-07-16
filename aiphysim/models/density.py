@@ -46,6 +46,9 @@ class Latent(nn.Module):
         hidden_size = opts.latent_hidden_size
         num_layers = opts.latent_num_layers
         dropout = opts.dropout
+        latent_dim = opts.latent_dim
+
+        self.proj_layer = nn.Linear(in_features=hidden_size, out_features=latent_dim)
 
         self.lstm = nn.LSTM(
             input_size=input_size,
@@ -58,7 +61,7 @@ class Latent(nn.Module):
     def forward(self, z):
         if z.ndim == 2:
             z.unsqueeze_(1)
-        return self.lstm(z)
+        return self.proj_layer(self.lstm(z))
 
 
 class DynamicLatentModel(nn.Module):
@@ -100,7 +103,7 @@ class DynamicLatentModel(nn.Module):
 
     def one_step_predictions(self, ts):
         encoded_ts = self.encode(ts)
-        _, next_zs = self.latent(encoded_ts)
+        next_zs, _ = self.latent(encoded_ts)
         next_decoded_ts = self.decode(next_zs)
         return encoded_ts, next_zs, next_decoded_ts
 
