@@ -3,7 +3,6 @@ import os
 
 import h5py
 import numpy as np
-import torch
 from torch.utils.data import Dataset
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes, too-many-locals
@@ -73,6 +72,9 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+
+            self._mean = np.mean(self.data, axis=(0, 2, 3))
+            self._std = np.std(self.data, axis=(0, 2, 3))
         elif mode == "val":
             self.data = np.stack(
                 [
@@ -91,6 +93,19 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+
+            training_data = np.stack(
+                [
+                    hdata["tasks"]["p"][: int(nt * train_size)],
+                    hdata["tasks"]["T"][: int(nt * train_size)],
+                    hdata["tasks"]["u"][: int(nt * train_size)],
+                    hdata["tasks"]["w"][: int(nt * train_size)],
+                ],
+                axis=0,
+            )
+
+            self._mean = np.mean(training_data, axis=(0, 2, 3))
+            self._std = np.std(training_data, axis=(0, 2, 3))
         else:
             self.data = np.stack(
                 [
@@ -101,6 +116,19 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+
+            training_data = np.stack(
+                [
+                    hdata["tasks"]["p"][: int(nt * train_size)],
+                    hdata["tasks"]["T"][: int(nt * train_size)],
+                    hdata["tasks"]["u"][: int(nt * train_size)],
+                    hdata["tasks"]["w"][: int(nt * train_size)],
+                ],
+                axis=0,
+            )
+
+            self._mean = np.mean(training_data, axis=(0, 2, 3))
+            self._std = np.std(training_data, axis=(0, 2, 3))
 
         self.data = self.data.astype(np.float32)
         self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]

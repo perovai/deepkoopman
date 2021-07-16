@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
         lz: float, Physical length in z dimension. (default: 1.0)
         nx: int, number of pixels in x dimension. (default: 128)
         nz: int, number of pixels in z dimension. (default: 64)
+        train: float, portion of the dataset to go to the train set. (default: 0.7)
+        val: float, portion of the dataset to go to the validation set. (default: 0.2)
         dt: float, timestep in seconds between frames in simulation time. (default: 1e-5)
         stop_sim_time: float, Simulation stop time in seconds. (default: 50)
         rayleigh: float, Simulation Rayleigh number. (default: 15e4)
@@ -56,6 +58,18 @@ def get_args():
         default=64,
         type=int,
         help="Simulation resolution in z dimension. (default: 64)",
+    )
+    parser.add_argument(
+        "--train",
+        default=0.7,
+        type=float,
+        help="Portion of the dataset to go to the train set. (default: 0.7)",
+    )
+    parser.add_argument(
+        "--val",
+        default=0.2,
+        type=float,
+        help="Portion of the dataset to go to the validation set. (default: 0.2)",
     )
     parser.add_argument(
         "--dt",
@@ -115,7 +129,7 @@ if __name__ == "__main__":
     Prandtl = args.prandtl
     Rayleigh = args.rayleigh
 
-    fname = f"snap_Pr_{Prandtl}_Ra_{int(Rayleigh)}_seed_{args.seed}"  # file name where experiments will be stored
+    fname = f"snap_Pr_{Prandtl}_Ra_{int(Rayleigh)}_seed_{args.seed}_noise_{args.ampl_noise}_stop_sim_time_{args.stop_sim_time}_dt_{args.dt}_train_{args.train}_val_{args.val}"  # file name where experiments will be stored
 
     # Create bases and domain
     x_basis = de.Fourier("x", nx, interval=(0, Lx), dealias=3 / 2)
