@@ -66,6 +66,8 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+            self.data = self.data.astype(np.float32)
+            self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
 
             self._mean = np.mean(self.data, axis=(0, 2, 3))
             self._std = np.std(self.data, axis=(0, 2, 3))
@@ -97,9 +99,14 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+            training_data = training_data.astype(np.float32)
+            training_data = training_data.transpose(1, 0, 3, 2)
 
             self._mean = np.mean(training_data, axis=(0, 2, 3))
             self._std = np.std(training_data, axis=(0, 2, 3))
+
+            self.data = self.data.astype(np.float32)
+            self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
         else:
             self.data = np.stack(
                 [
@@ -120,12 +127,15 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+            training_data = training_data.astype(np.float32)
+            training_data = training_data.transpose(1, 0, 3, 2)
 
             self._mean = np.mean(training_data, axis=(0, 2, 3))
             self._std = np.std(training_data, axis=(0, 2, 3))
 
-        self.data = self.data.astype(np.float32)
-        self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
+            self.data = self.data.astype(np.float32)
+            self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
+
         self.nt_data = self.data.shape[0]
 
     def __len__(self):
