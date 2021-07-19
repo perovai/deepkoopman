@@ -32,13 +32,18 @@ def create_datasets(
         }
 
     if dataset_type == "spacetime":
-        # Sample dataset for setting up code
-        train_files = list(Path(path).glob("snapshots_s1_p0.h5"))
+        dataset_file = list(Path(path).glob("snapshots.h5"))[0]
 
         return {
             "train": RB2DataLoader(
-                train_files, train_lim
-            ),  # Class from implementation of Meshfree Flow Net paper
+                path, dataset_file, train_lim
+            ),
+            "val": RB2DataLoader(
+                path, dataset_file, train_lim
+            ),
+            "test": RB2DataLoader(
+                path, dataset_file, train_lim
+            ), 
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
