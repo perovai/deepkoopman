@@ -132,10 +132,9 @@ class RB2DataLoader(Dataset):
         return self.nt_data - self.timesteps
 
     def __getitem__(self, idx):
-        t_id, z_id, x_id = self.rand_start_id[idx]
-        u_t = self.data[t_id : t_id + self.timesteps]  # [t, c, z, x]
+        u_t = self.data[idx : idx + self.timesteps]  # [t, c, z, x]
         u_t_next = self.data[
-            t_id + self.timesteps : t_id + self.timesteps + 1
+            idx + self.timesteps : idx + self.timesteps + 1
         ]  # [t, c, z, x]
 
         return_tensors = [u_t, u_t_next]
