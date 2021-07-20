@@ -104,7 +104,7 @@ class BaseLoss:
                     losses[loss_name] = loss(*loss_args)
                     if self.is_loss:
                         weight = float(self.weights.get(loss_name, 1))
-                        losses["total"] += losses[loss_func] * weight
+                        losses["total"] += losses[loss_name] * weight
                 except Exception as e:
                     print(
                         "Error in loss",
