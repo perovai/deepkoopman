@@ -28,7 +28,7 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
 ### Getting started with comet_ml
 
 1. Create an account https://www.comet.ml/signup
-2. In your account settings go to `Developper Information`, then `Generate an API Key` and copy it.
+2. In your account settings go to `Developer Information`, then `Generate an API Key` and copy it.
 3. Create a `~/.comet.config` file in your home with the following lines:
 
   ```ini
