@@ -15,7 +15,7 @@ loss_type: density
 metrics_type: density
 
 weights:
-  l2: 1
+  l2: 1e-7
   mse_latent: 1
   mse_next_decoded: 1
   mse_decoded: 1
