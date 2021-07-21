@@ -1,4 +1,5 @@
 import ast
+from collections import defaultdict
 import os
 from os.path import expandvars
 from pathlib import Path
@@ -10,6 +11,7 @@ from addict import Dict
 from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
+from time import time
 
 COMET_KWARGS = {
     "auto_metric_logging": False,
@@ -294,3 +296,24 @@ def dat_to_array(fname, shape=3):
     array = np.array(matrix)
 
     return np.reshape(array, (-1, shape, array.shape[-1]))
+
+
+def timeit(func):
+    def wrapper_time(*args, **kwargs):
+        # https://math.stackexchange.com/questions/106700/incremental-averageing
+        self = args[0]
+        if not hasattr(self, "_times"):
+            self._times = defaultdict(list)
+        if not hasattr(self, "_mean_times"):
+            self._times = defaultdict(int)
+        t = time()
+        return_values = func(*args, **kwargs)
+        new_duration = time() - t
+        self._times[func.__name__].append(new_duration)
+        n = len(self._times[func.__name__])
+        m = self._mean_times[func.__name__]
+        self._mean_times[func.__name__] = m + (new_duration - m) / n
+
+        return return_values
+
+    return wrapper_time

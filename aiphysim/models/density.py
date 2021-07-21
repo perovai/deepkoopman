@@ -1,4 +1,5 @@
 import torch.nn as nn
+from aiphysim.utils import timeit
 
 
 class Encoder(nn.Module):
@@ -15,6 +16,7 @@ class Encoder(nn.Module):
         self.layers.append(nn.Linear(widths[j + 1], self.output_dim))
         self.layers = nn.Sequential(*self.layers)
 
+    @timeit
     def forward(self, x):
         return self.layers(x)
 
@@ -33,6 +35,7 @@ class Decoder(nn.Module):
         self.layers.append(nn.Linear(widths[j + 1], self.output_dim))
         self.layers = nn.Sequential(*self.layers)
 
+    @timeit
     def forward(self, x):
         return self.layers(x)
 
@@ -56,6 +59,7 @@ class Latent(nn.Module):
             proj_size=input_size,
         )
 
+    @timeit
     def forward(self, z):
         if z.ndim == 2:
             z.unsqueeze_(1)
@@ -76,11 +80,13 @@ class DynamicLatentModel(nn.Module):
         self.flatten = nn.Flatten(-2, -1)
         self.unflatten = nn.Unflatten(-1, tuple(self.density_matrix_shape))
 
+    @timeit
     def encode(self, x):
         x = self.flatten(x)
         z = self.encoder(x)
         return z
 
+    @timeit
     def decode(self, z):
         y = self.decoder(z)
         return self.unflatten(y)
@@ -106,6 +112,7 @@ class DynamicLatentModel(nn.Module):
         next_decoded_ts = self.decode(next_zs)
         return encoded_ts, decoded_ts, next_zs, next_decoded_ts
 
+    @timeit
     def forward(self, batch, device="cpu"):
         time_series = batch["data"].to(device)
         return self.one_step_predictions(time_series)

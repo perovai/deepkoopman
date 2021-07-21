@@ -18,6 +18,7 @@ from aiphysim.utils import (
     mem_size,
     num_params,
     resolve,
+    timeit,
 )
 
 
@@ -175,6 +176,7 @@ class Trainer:
         batch = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
         return batch.to(self.device)
 
+    @timeit
     def run_step(self, batch):
         """
         Execute a training step:
@@ -195,6 +197,7 @@ class Trainer:
         self.logger.global_step += 1
         self.logger.log_step(train_losses)
 
+    @timeit
     def run_epoch(self):
         """
         Iterate over the entire train data-loader
@@ -263,6 +266,7 @@ class Trainer:
                 self.opts.output_path / "final_traj_plot.png",
             )
 
+    @timeit
     @torch.no_grad()
     def run_evaluation(self):
         """
@@ -301,6 +305,7 @@ class Trainer:
         print()
         return losses["total"]
 
+    @timeit
     def save(self, loss=None, name=None):
 
         # if epoch is not provided just save as "latest.ckpt"
@@ -357,6 +362,7 @@ class Trainer:
         if hasattr(self, "scheduler") and self.scheduler:
             self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
 
+    @timeit
     def to_device(self, item):
         if isinstance(item, (torch.Tensor, torch.nn.Module)):
             return item.to(self.device)

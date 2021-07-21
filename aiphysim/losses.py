@@ -3,6 +3,8 @@ import traceback as tb
 import numpy as np
 import torch
 
+from aiphysim.utils import timeit
+
 
 class BaseLoss:
     def __init__(self, opts, is_loss=True):
@@ -67,6 +69,7 @@ class BaseLoss:
         mse = torch.nn.functional.mse_loss(predictions, targets, reduction="none")
         return torch.transpose(mse, 1, 0).reshape(mse.shape[1], -1).mean(-1)
 
+    @timeit
     def compute(self, *args):
         self.set_args(*args)
 
