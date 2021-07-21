@@ -46,7 +46,6 @@ class Trainer:
         opts_path = path / "opts.yaml"
         assert opts_path.exists()
         opts = load_opts(opts_path)
-        breakpoint()
         if isinstance(overrides, (Dict, dict)):
             opts.update(overrides)
 
@@ -131,7 +130,7 @@ class Trainer:
                 self.exp,
                 n_train=len(self.loaders["train"]),
                 n_val=len(self.loaders["val"]),
-                n_test=len(self.loaders["test"]),
+                n_test=len(self.loaders.get("test", [])),
             )
             # create optimizer from opts
             self.optimizer, self.scheduler = get_optimizer(self.opts, self.model)
@@ -202,7 +201,7 @@ class Trainer:
         """
         self.model.train()
         for self.logger.batch_id, batch in enumerate(self.loaders["train"]):
-            batch = batch.to(self.device)
+            batch = self.to_device(batch)
             self.run_step(batch)
 
     def train(self):
@@ -276,13 +275,13 @@ class Trainer:
         losses = metrics = None
         print()
         for batch in tqdm(self.loaders["val"]):
-            batch = batch.to(self.device)
 
-            state = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
-            predictions = self.model.forward(state)
+            batch = self.to_device(batch)
 
-            val_losses = self.losses.compute(state, predictions, self.model)
-            val_metrics = self.metrics.compute(state, predictions, self.model)
+            predictions = self.model.forward(batch)
+
+            val_losses = self.losses.compute(batch, predictions, self.model)
+            val_metrics = self.metrics.compute(batch, predictions, self.model)
 
             if losses is None:
                 losses = {k: [] for k in val_losses}
@@ -357,3 +356,15 @@ class Trainer:
             self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
         if hasattr(self, "scheduler") and self.scheduler:
             self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
+
+    def to_device(self, item):
+        if isinstance(item, (torch.Tensor, torch.nn.Module)):
+            return item.to(self.device)
+
+        if isinstance(item, list):
+            return [self.to_device(i) for i in item]
+
+        if isinstance(item, dict):
+            return {k: self.to_device(v) for k, v in item.items()}
+
+        return item
