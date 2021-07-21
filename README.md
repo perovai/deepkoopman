@@ -39,6 +39,9 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
 
 1. Share your username with victor to be added as a collaborator and you're good to go :)
 
+### Dedalus installation
+https://dedalus-project.readthedocs.io/en/latest/pages/installation.html#alternative-installation-procedures
+
 ## Code structure
 
 * The main component to execute code is a `Trainer` object. It's an object-oriented programming way of stitching together many moving parts: pytorch models, data loaders, optimizers, schedulers, losses etc.
@@ -52,11 +55,15 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
 
 ## Data
 
-DeepKoopman Datasets
+### DeepKoopman Datasets
 
 https://drive.google.com/file/d/1XRfa4EQ3JauAmlMxE92_kBvGg126DrfM/view?usp=sharing
 
 unzip and put sub-folders in `datasets/`
+
+### Dedalus Datasets
+#TODO
+
 ## Opts
 
 The trainer/model opts are not your regular dict, rather an `addict`: check out [addict](https://github.com/mewwts/addict) to have dot access:
