@@ -62,7 +62,7 @@ https://drive.google.com/file/d/1XRfa4EQ3JauAmlMxE92_kBvGg126DrfM/view?usp=shari
 unzip and put sub-folders in `datasets/`
 
 ### Dedalus Datasets
-#TODO
+These are generated using `aiphysim/dedalus-dataset/rayeigh-benard.py`, which is derived from the [MeshfreeFlowNet code (Jiang et al. 2020)](https://github.com/maxjiang93/space_time_pde). 
 
 ## Opts
 
