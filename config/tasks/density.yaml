@@ -12,6 +12,10 @@ latent_hidden_size: 128
 latent_num_layers: 2
 
 loss_type: density
-losses:
-  - l2
-  - time_mse
+metrics_type: density
+
+weights:
+  l2: 1
+  mse_latent: 1
+  mse_next_decoded: 1
+  mse_decoded: 1
