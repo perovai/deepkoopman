@@ -5,11 +5,11 @@ import torch
 
 
 class BaseLoss:
-    def __init__(self, opts, is_loss=False):
+    def __init__(self, opts, is_loss=True):
         self.weights = (
             {name: float(weight) for name, weight in opts.weights.items()}
             if is_loss
-            else None
+            else {}
         )
 
         self.is_loss = is_loss
@@ -52,9 +52,9 @@ class BaseLoss:
 
     @staticmethod
     def l2(model):
-        l2_reg = torch.tensor(0.0)
+        l2_reg = 0
         for param in model.parameters():
-            l2_reg += torch.norm(param)
+            l2_reg = l2_reg + torch.norm(param)
         return l2_reg
 
     @staticmethod
@@ -200,9 +200,9 @@ def get_loss_and_metrics(opts):
         raise ValueError("Unknown loss type: " + str(loss_type))
 
     if metrics_type == "spacetime":
-        metrics = SpaceTimeMetrics(opts, True)
+        metrics = SpaceTimeMetrics(opts, False)
     elif metrics_type == "density":
-        metrics = DensityMetrics(opts, True)
+        metrics = DensityMetrics(opts, False)
     else:
         raise ValueError("Unknown metrics type: " + str(metrics_type))
 
