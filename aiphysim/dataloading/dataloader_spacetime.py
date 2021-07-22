@@ -56,6 +56,8 @@ class RB2DataLoader(Dataset):
 
         nt = hdata["tasks"]["u"].shape[0]
 
+        mean, std = self.compute_statistics(hdata, train_size)
+
         if mode == "train":
             self.data = np.stack(
                 [
@@ -66,11 +68,8 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
-            self.data = self.data.astype(np.float32)
             self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
 
-            self._mean = np.mean(self.data, axis=(0, 2, 3))
-            self._std = np.std(self.data, axis=(0, 2, 3))
         elif mode == "val":
             self.data = np.stack(
                 [
@@ -90,22 +89,6 @@ class RB2DataLoader(Dataset):
                 axis=0,
             )
 
-            training_data = np.stack(
-                [
-                    hdata["tasks"]["p"][: int(nt * train_size)],
-                    hdata["tasks"]["T"][: int(nt * train_size)],
-                    hdata["tasks"]["u"][: int(nt * train_size)],
-                    hdata["tasks"]["w"][: int(nt * train_size)],
-                ],
-                axis=0,
-            )
-            training_data = training_data.astype(np.float32)
-            training_data = training_data.transpose(1, 0, 3, 2)
-
-            self._mean = np.mean(training_data, axis=(0, 2, 3))
-            self._std = np.std(training_data, axis=(0, 2, 3))
-
-            self.data = self.data.astype(np.float32)
             self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
         else:
             self.data = np.stack(
@@ -118,25 +101,36 @@ class RB2DataLoader(Dataset):
                 axis=0,
             )
 
-            training_data = np.stack(
-                [
-                    hdata["tasks"]["p"][: int(nt * train_size)],
-                    hdata["tasks"]["T"][: int(nt * train_size)],
-                    hdata["tasks"]["u"][: int(nt * train_size)],
-                    hdata["tasks"]["w"][: int(nt * train_size)],
-                ],
-                axis=0,
-            )
-            training_data = training_data.astype(np.float32)
-            training_data = training_data.transpose(1, 0, 3, 2)
-
-            self._mean = np.mean(training_data, axis=(0, 2, 3))
-            self._std = np.std(training_data, axis=(0, 2, 3))
-
-            self.data = self.data.astype(np.float32)
             self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
 
         self.nt_data = self.data.shape[0]
+
+        self._mean = mean
+        self._std = std
+
+    def compute_statistics(self, hdata, train_size):
+        """
+        Computes the mean and standard deviation from the training set's data
+
+        Args:
+            hdata : h5py.Dataset, The h5 dataset
+            train_size : float, specifies the portion of the dataset to be held for training
+        """
+        nt = hdata["tasks"]["u"].shape[0]
+
+        training_data = np.stack(
+            [
+                hdata["tasks"]["p"][: int(nt * train_size)],
+                hdata["tasks"]["T"][: int(nt * train_size)],
+                hdata["tasks"]["u"][: int(nt * train_size)],
+                hdata["tasks"]["w"][: int(nt * train_size)],
+            ],
+            axis=0,
+        )
+        training_data = training_data.transpose(1, 0, 3, 2)
+        mean = np.mean(training_data, axis=(0, 2, 3))
+        std = np.std(training_data, axis=(0, 2, 3))
+        return mean, std
 
     def __len__(self):
         return self.nt_data - self.timesteps
