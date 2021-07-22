@@ -139,18 +139,11 @@ class Unet3DLoss(BaseLoss):
         Compute the weighted loss with respect to targets and predictions
 
         Args:
-            targets (dict): dictionnary of target values
+            inputs (dict): dictionnary of target values
             predictions (dict): dictionnary of predicted values
         """
-        embedding, y, latent_evol = predictions
 
-        self.args = {
-            "reconstruction": (inputs[0, :, :], y[0]),
-            "prediction": (inputs, y, self.shifts),
-            "linear": (embedding, latent_evol, self.middle_shifts),
-            "l2": (model,),
-            "inf_norm": (inputs, y),
-        }
+        self.args = {"reconstruction": (inputs, predictions)}
 
 
 def get_loss_and_metrics(opts):
