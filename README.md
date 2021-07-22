@@ -62,7 +62,13 @@ https://drive.google.com/file/d/1XRfa4EQ3JauAmlMxE92_kBvGg126DrfM/view?usp=shari
 unzip and put sub-folders in `datasets/`
 
 ### Dedalus Datasets
-These are generated using `aiphysim/dedalus-dataset/rayeigh-benard.py`, which is derived from the [MeshfreeFlowNet code (Jiang et al. 2020)](https://github.com/maxjiang93/space_time_pde). 
+The fluid simulations are generated using `aiphysim/dedalus-dataset/rayeigh-benard.py`, which is derived from the [This repository](https://github.com/benkywenk/RB2D/blob/main/RB2D_convection.ipynb). 
+
+In order to generate a simulation dataset, run the following:
+
+```
+python rayleigh-benard.py --lx [lx] --lz [lz] --nx [nx] --nz [nz] --train [train] --val [val] --dt [dt] --stop_sim_time [stop_sim_time] --rayleigh [rayleigh] --prandtl [prandtl] --ampl_noise [ampl_noise] --seed [seed] --logging_period [logging_period]
+```
 
 ## Opts
 
