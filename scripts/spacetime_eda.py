@@ -1,10 +1,11 @@
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from torch.utils.data import DataLoader
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from aiphysim.dataloading.dataloader_spacetime import RB2DataLoader
+from aiphysim.dataloading.dataloader_spacetime import RB2DataLoader  # noqa: E402
 
 if __name__ == "__main__":
 

@@ -2,8 +2,8 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
-from .density_dataset import DatDensityDataset, H5DensityDataset
 from .dataloader_spacetime import RB2DataLoader
+from .density_dataset import DatDensityDataset, H5DensityDataset
 from .koopman_dataset import KoopmanDataset
 
 

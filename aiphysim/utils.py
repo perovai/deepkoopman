@@ -1,8 +1,9 @@
 import ast
-from collections import defaultdict
 import os
+from collections import defaultdict
 from os.path import expandvars
 from pathlib import Path
+from time import time
 
 import numpy as np
 import torch
@@ -11,7 +12,6 @@ from addict import Dict
 from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
-from time import time
 
 COMET_KWARGS = {
     "auto_metric_logging": False,

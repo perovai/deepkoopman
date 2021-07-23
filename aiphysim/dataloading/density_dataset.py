@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 
 import h5py
-import torch
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 
 from aiphysim.utils import dat_to_array

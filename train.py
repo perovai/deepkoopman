@@ -1,6 +1,6 @@
 import minydra
-from comet_ml import Experiment
 from addict import Dict
+from comet_ml import Experiment
 
 from aiphysim.trainer import Trainer
 from aiphysim.utils import (

@@ -1,6 +1,6 @@
+from .density import DynamicLatentModel
 from .koopman import DeepKoopman
 from .spacetime import SpaceTime
-from .density import DynamicLatentModel
 
 
 def create_model(opts):

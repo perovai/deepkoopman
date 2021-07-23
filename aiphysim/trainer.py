@@ -1,8 +1,8 @@
 import numpy as np
 import torch
+from addict import Dict
 from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
-from addict import Dict
 
 from aiphysim.dataloading import create_dataloaders
 from aiphysim.logger import Logger
