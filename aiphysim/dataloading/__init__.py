@@ -2,11 +2,11 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
+from aiphysim.utils import resolve
+
 from .dataloader_spacetime import RB2DataLoader
 from .density_dataset import DensityDataset
 from .koopman_dataset import KoopmanDataset
-
-from aiphysim.utils import resolve
 
 
 def create_datasets(opts):
