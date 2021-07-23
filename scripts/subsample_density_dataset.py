@@ -5,6 +5,8 @@ import h5py
 import minydra
 import numpy as np
 
+from tqdm import tqdm
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from aiphysim.utils import dat_to_array, new_unique_path, resolve  # noqa: E402
@@ -182,12 +184,13 @@ if __name__ == "__main__":
     files = sample_files(path, datasets, i1, t3, ignore_delays)
     files = sorted(files, key=lambda x: str(x))
 
+    print(f"Writing {len(files)} to {str(out)}")
+
     with h5py.File(str(out), "w-") as f5:
 
         f5.attrs.update(dict(args))
 
-        for i, f in enumerate(files):
-            print(str(f)[-70:].ljust(70), str(i).zfill(4) + f"/{len(files)}", end="\r")
+        for i, f in tqdm(enumerate(files)):
             labels = label_file(f)
             data = dat_to_array(f, shape=3)
             d = f5.create_dataset(
@@ -195,7 +198,7 @@ if __name__ == "__main__":
                 data=data,
                 dtype="f",
                 compression="gzip",
-                compression_opts=4,
+                compression_opts=2,
             )
             d.attrs.update(labels)
 
