@@ -153,6 +153,7 @@ if __name__ == "__main__":
         ):
             print("Aborting")
             sys.exit()
+        ignore_delays = 1
 
     print("\n" + "-" * 50 + "\n")
 
