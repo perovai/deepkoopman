@@ -88,37 +88,20 @@ print(opts.losses.recon)
 prints:
 
 ```python
+8
+{}
 True
 ```
 
-### opts.yaml
+### yaml configs
 
-The `opts` keys can be specified:
+The `opts` will be loaded from `config/defaults.yaml`, then the resulting `Dict` will be updated from `config/tasks/{task}.yaml` when specifying the `task` from the command-line `python train.py task={task}`.
 
-* per task
-
-    ```yaml
-    param:
-      task: value
-    ```
-
-* for all tasks
-    ```yaml
-    param: value
-    ```
-
-  or
-
-    ```yaml
-    param:
-      key1: value1
-      key2: value2
-      ...
-    ```
+Any parameter can be overwritten from the command-line. Nested keys are dot-separated, eg: `python train.py optimizer.lr=1e-4`.
 
 ## Run
 
-Note1: It expects csv files to be stored in `datasets/DiscreteSpectrumExample` folder.
+Note1: Koopman data expects csv files to be stored in `datasets/DiscreteSpectrumExample` folder.
 
 Note2: To log data to [comet.ml](https://comet.ml) checkout <https://www.comet.ml/docs/python-sdk/advanced/#non-interactive-setup> for instructions on how to setup your comet_ml API key: either in `~/.comet.config` or as an environment variable COMET_API_KEY. If you do not want to log progress to `comet`, then pass the argument `comet.use=False` in the command line.
 
@@ -139,7 +122,7 @@ outputs = trainer.model(batch)
 
 ## Misc
 
-* data in the original code is of shape `(num_shift + 1, batch, dim)` where `num_shifts` is `number of shifts (time steps) that losses will use (maximum is len_time - 1)`
+* data in the original DeepKoopman code is of shape `(num_shift + 1, batch, dim)` where `num_shifts` is `number of shifts (time steps) that losses will use (maximum is len_time - 1)`
 
 ## Reading perovskite data
 
