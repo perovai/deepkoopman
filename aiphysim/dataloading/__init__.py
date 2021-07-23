@@ -6,10 +6,20 @@ from .dataloader_spacetime import RB2DataLoader
 from .density_dataset import DensityDataset
 from .koopman_dataset import KoopmanDataset
 
+from aiphysim.utils import resolve
 
-def create_datasets(
-    path, sequence_length, dataset_type="koopman", train_lim=-1, val_lim=-1, test_lim=-1
-):
+
+def create_datasets(opts):
+
+    lims = {
+        f"{mode}": opts.get("limit", {}).get(mode, -1)
+        for mode in ["train", "val", "test"]
+    }
+
+    path = resolve(opts.data_folder)
+    sequence_length = opts.sequence_length
+    dataset_type = opts.dataset_type
+
     if dataset_type == "koopman":
         print("Creating datasets from ", str(path))
         train_files = list(Path(path).glob("*_train*.csv"))
@@ -17,9 +27,9 @@ def create_datasets(
         test_files = list(Path(path).glob("*_test*.csv"))
 
         return {
-            "train": KoopmanDataset(train_files, sequence_length, train_lim),
-            "val": KoopmanDataset(val_files, sequence_length, val_lim),
-            "test": KoopmanDataset(test_files, sequence_length, test_lim),
+            "train": KoopmanDataset(train_files, sequence_length, lims["train"]),
+            "val": KoopmanDataset(val_files, sequence_length, lims["val"]),
+            "test": KoopmanDataset(test_files, sequence_length, lims["test"]),
         }
 
     if dataset_type == "density":
@@ -27,23 +37,17 @@ def create_datasets(
         val_files = list(Path(path).glob("val_*.h5"))
 
         return {
-            "train": DensityDataset(train_files, train_lim),
-            "val": DensityDataset(val_files, val_lim),
+            "train": DensityDataset(train_files, lims["train"]),
+            "val": DensityDataset(val_files, lims["val"]),
         }
 
     if dataset_type == "spacetime":
         dataset_file = list(Path(path).glob("snapshots.h5"))[0]
 
         return {
-            "train": RB2DataLoader(
-                path, dataset_file, train_lim
-            ),
-            "val": RB2DataLoader(
-                path, dataset_file, train_lim
-            ),
-            "test": RB2DataLoader(
-                path, dataset_file, train_lim
-            ), 
+            "train": RB2DataLoader(path, dataset_file, lims["train"]),
+            "val": RB2DataLoader(path, dataset_file, lims["val"]),
+            "test": RB2DataLoader(path, dataset_file, lims["test"]),
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
@@ -62,21 +66,11 @@ def create_dataloaders(opts):
         dict: {"train": dataloader, "val": dataloader, "test": dataloader}
     """
 
-    lims = {
-        f"{mode}": opts.get("limit", {}).get(mode, -1)
-        for mode in ["train", "val", "test"]
-    }
+    datasets = create_datasets(opts)
 
-    path = opts.data_folder
-    sequence_length = opts.sequence_length
-    batch_size = opts.batch_size
-    dataset_type = opts.dataset_type
     workers = opts.workers
+    batch_size = opts.batch_size
 
-    path = Path(path).expanduser().resolve()
-    datasets = create_datasets(
-        path, sequence_length, dataset_type, lims["train"], lims["val"], lims["test"]
-    )
     return {
         k: DataLoader(
             v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers
