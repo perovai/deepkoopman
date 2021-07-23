@@ -305,7 +305,7 @@ def timeit(func):
         if not hasattr(self, "_times"):
             self._times = defaultdict(list)
         if not hasattr(self, "_mean_times"):
-            self._times = defaultdict(int)
+            self._mean_times = defaultdict(int)
         t = time()
         return_values = func(*args, **kwargs)
         new_duration = time() - t
