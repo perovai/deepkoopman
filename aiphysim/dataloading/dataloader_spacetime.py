@@ -19,8 +19,6 @@ class RB2DataLoader(Dataset):
         data_dir="./",
         data_filename="./data/snapshots.h5",
         mode="train",
-        res_x=64,
-        res_z=64,
         train_size=0.7,
         val_size=0.2,
         normalize=True,
@@ -33,8 +31,6 @@ class RB2DataLoader(Dataset):
           data_dir: str, path to the dataset folder, default="./"
           data_filename: str, name of the dataset file, default="/data/snapshots.h5"
           mode: str, dataset mode, can be on of ['train', 'val', 'test'], default="train"
-          res_x: int, resolution in the x-axis, default=64
-          res_z: int, resolution in the z-axis, default=64
           train_size: float, specifies the portion of the dataset to be held for training, default=0.7
           val_size: float, specifies the portion of the dataset to be held for validation, default=0.2
           normalize: bool, whether to standardize the data or not, default=True
@@ -52,15 +48,15 @@ class RB2DataLoader(Dataset):
         self.data_dir = data_dir
         self.data_filename = data_filename
         self.mode = mode
-        self.res_x = res_x
-        self.res_z = res_z
         self.normalize = normalize
         self.timesteps = timesteps
 
         # concatenating pressure, temperature, x-velocity, and z-velocity as a 4 channel array: pbuw
         hdata = h5py.File(os.path.join(self.data_dir, self.data_filename), "r")
 
-        nt, _, _ = hdata["tasks"]["u"].shape
+        nt = hdata["tasks"]["u"].shape[0]
+
+        mean, std = self.compute_statistics(hdata, train_size)
 
         if mode == "train":
             self.data = np.stack(
@@ -72,9 +68,8 @@ class RB2DataLoader(Dataset):
                 ],
                 axis=0,
             )
+            self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
 
-            self._mean = np.mean(self.data, axis=(0, 2, 3))
-            self._std = np.std(self.data, axis=(0, 2, 3))
         elif mode == "val":
             self.data = np.stack(
                 [
@@ -94,18 +89,7 @@ class RB2DataLoader(Dataset):
                 axis=0,
             )
 
-            training_data = np.stack(
-                [
-                    hdata["tasks"]["p"][: int(nt * train_size)],
-                    hdata["tasks"]["T"][: int(nt * train_size)],
-                    hdata["tasks"]["u"][: int(nt * train_size)],
-                    hdata["tasks"]["w"][: int(nt * train_size)],
-                ],
-                axis=0,
-            )
-
-            self._mean = np.mean(training_data, axis=(0, 2, 3))
-            self._std = np.std(training_data, axis=(0, 2, 3))
+            self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
         else:
             self.data = np.stack(
                 [
@@ -117,58 +101,44 @@ class RB2DataLoader(Dataset):
                 axis=0,
             )
 
-            training_data = np.stack(
-                [
-                    hdata["tasks"]["p"][: int(nt * train_size)],
-                    hdata["tasks"]["T"][: int(nt * train_size)],
-                    hdata["tasks"]["u"][: int(nt * train_size)],
-                    hdata["tasks"]["w"][: int(nt * train_size)],
-                ],
-                axis=0,
-            )
+            self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
 
-            self._mean = np.mean(training_data, axis=(0, 2, 3))
-            self._std = np.std(training_data, axis=(0, 2, 3))
+        self.nt_data = self.data.shape[0]
 
-        self.data = self.data.astype(np.float32)
-        self.data = self.data.transpose(1, 0, 3, 2)  # [t, c, z, x]
-        self.nt_data, self.nc_data, self.nz_data, self.nx_data = self.data.shape
+        self._mean = mean
+        self._std = std
 
-        self.nx_start_range = np.arange(0, self.nx_data - self.res_x + 1)
-        self.nz_start_range = np.arange(0, self.nz_data - self.res_z + 1)
-        self.nt_start_range = np.arange(0, self.nt_data - self.timesteps + 1)
-        self.rand_grid = np.stack(
-            np.meshgrid(
-                self.nt_start_range,
-                self.nz_start_range,
-                self.nx_start_range,
-                indexing="ij",
-            ),
-            axis=-1,
+    def compute_statistics(self, hdata, train_size):
+        """
+        Computes the mean and standard deviation from the training set's data
+
+        Args:
+            hdata : h5py.Dataset, The h5 dataset
+            train_size : float, specifies the portion of the dataset to be held for training
+        """
+        nt = hdata["tasks"]["u"].shape[0]
+
+        training_data = np.stack(
+            [
+                hdata["tasks"]["p"][: int(nt * train_size)],
+                hdata["tasks"]["T"][: int(nt * train_size)],
+                hdata["tasks"]["u"][: int(nt * train_size)],
+                hdata["tasks"]["w"][: int(nt * train_size)],
+            ],
+            axis=0,
         )
-        # (xaug, zaug, taug, 3)
-        self.rand_start_id = self.rand_grid.reshape([-1, 3])
-
-        # compute channel-wise mean and std
-        self._mean = np.mean(self.data, axis=(0, 2, 3))
-        self._std = np.std(self.data, axis=(0, 2, 3))
+        training_data = training_data.transpose(1, 0, 3, 2)
+        mean = np.mean(training_data, axis=(0, 2, 3))
+        std = np.std(training_data, axis=(0, 2, 3))
+        return mean, std
 
     def __len__(self):
-        return self.rand_start_id.shape[0] - self.nt_data
+        return self.nt_data - self.timesteps
 
     def __getitem__(self, idx):
-        t_id, z_id, x_id = self.rand_start_id[idx]
-        u_t = self.data[
-            t_id : t_id + self.timesteps,
-            :,
-            z_id : z_id + self.res_z,
-            x_id : x_id + self.res_x,
-        ]  # [t, c, z, x]
+        u_t = self.data[idx : idx + self.timesteps]  # [t, c, z, x]
         u_t_next = self.data[
-            t_id + self.timesteps : t_id + self.timesteps + 1,
-            :,
-            z_id : z_id + self.res_z,
-            x_id : x_id + self.res_x,
+            idx + self.timesteps : idx + self.timesteps + 1
         ]  # [t, c, z, x]
 
         return_tensors = [u_t, u_t_next]

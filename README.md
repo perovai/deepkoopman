@@ -28,7 +28,7 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
 ### Getting started with comet_ml
 
 1. Create an account https://www.comet.ml/signup
-2. In your account settings go to `Developper Information`, then `Generate an API Key` and copy it.
+2. In your account settings go to `Developer Information`, then `Generate an API Key` and copy it.
 3. Create a `~/.comet.config` file in your home with the following lines:
 
   ```ini
@@ -38,6 +38,9 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
   ```
 
 1. Share your username with victor to be added as a collaborator and you're good to go :)
+
+### Dedalus installation
+https://dedalus-project.readthedocs.io/en/latest/pages/installation.html#alternative-installation-procedures
 
 ## Code structure
 
@@ -52,11 +55,21 @@ Code style: use `black` to format the code and `flake8` to lint (and help you!)
 
 ## Data
 
-DeepKoopman Datasets
+### DeepKoopman Datasets
 
 https://drive.google.com/file/d/1XRfa4EQ3JauAmlMxE92_kBvGg126DrfM/view?usp=sharing
 
 unzip and put sub-folders in `datasets/`
+
+### Dedalus Datasets
+The fluid simulations are generated using `aiphysim/dedalus-dataset/rayeigh-benard.py`, which is derived from the [This repository](https://github.com/benkywenk/RB2D/blob/main/RB2D_convection.ipynb). 
+
+In order to generate a simulation dataset, run the following:
+
+```
+python rayleigh-benard.py --lx [lx] --lz [lz] --nx [nx] --nz [nz] --train [train] --val [val] --dt [dt] --stop_sim_time [stop_sim_time] --rayleigh [rayleigh] --prandtl [prandtl] --ampl_noise [ampl_noise] --seed [seed] --logging_period [logging_period]
+```
+
 ## Opts
 
 The trainer/model opts are not your regular dict, rather an `addict`: check out [addict](https://github.com/mewwts/addict) to have dot access:

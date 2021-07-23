@@ -2,20 +2,25 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
+from aiphysim.utils import resolve
+
 from .dataloader_spacetime import RB2DataLoader
 from .density_dataset import DatDensityDataset, H5DensityDataset
 from .koopman_dataset import KoopmanDataset
 
 
-def create_datasets(
-    path,
-    sequence_length,
-    dataset_type="koopman",
-    force_rebase=None,
-    train_lim=-1,
-    val_lim=-1,
-    test_lim=-1,
-):
+def create_datasets(opts):
+
+    lims = {
+        f"{mode}": opts.get("limit", {}).get(mode, -1)
+        for mode in ["train", "val", "test"]
+    }
+
+    path = resolve(opts.data_folder)
+    sequence_length = opts.sequence_length
+    dataset_type = opts.dataset_type
+    force_rebase = opts.get("force_rebase")
+
     if dataset_type == "koopman":
         print("Creating datasets from ", str(path))
         train_files = list(Path(path).glob("*_train*.csv"))
@@ -23,9 +28,9 @@ def create_datasets(
         test_files = list(Path(path).glob("*_test*.csv"))
 
         return {
-            "train": KoopmanDataset(train_files, sequence_length, train_lim),
-            "val": KoopmanDataset(val_files, sequence_length, val_lim),
-            "test": KoopmanDataset(test_files, sequence_length, test_lim),
+            "train": KoopmanDataset(train_files, sequence_length, lims["train"]),
+            "val": KoopmanDataset(val_files, sequence_length, lims["val"]),
+            "test": KoopmanDataset(test_files, sequence_length, lims["test"]),
         }
 
     if dataset_type == "h5density":
@@ -33,8 +38,8 @@ def create_datasets(
         val_files = list(Path(path).glob("val_*.h5"))
 
         return {
-            "train": H5DensityDataset(train_files, train_lim),
-            "val": H5DensityDataset(val_files, val_lim),
+            "train": H5DensityDataset(train_files, lims["train"]),
+            "val": H5DensityDataset(val_files, lims["val"]),
         }
 
     if dataset_type == "datdensity":
@@ -42,18 +47,17 @@ def create_datasets(
         val_files = list(Path(path).glob("val_*.json"))
 
         return {
-            "train": DatDensityDataset(train_files, train_lim, force_rebase),
-            "val": DatDensityDataset(val_files, val_lim, force_rebase),
+            "train": DatDensityDataset(train_files, lims["train"], force_rebase),
+            "val": DatDensityDataset(val_files, lims["val"], force_rebase),
         }
 
     if dataset_type == "spacetime":
-        # Sample dataset for setting up code
-        train_files = list(Path(path).glob("snapshots_s1_p0.h5"))
+        dataset_file = list(Path(path).glob("snapshots.h5"))[0]
 
         return {
-            "train": RB2DataLoader(
-                train_files, train_lim
-            ),  # Class from implementation of Meshfree Flow Net paper
+            "train": RB2DataLoader(path, dataset_file, lims["train"]),
+            "val": RB2DataLoader(path, dataset_file, lims["val"]),
+            "test": RB2DataLoader(path, dataset_file, lims["test"]),
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
@@ -72,28 +76,11 @@ def create_dataloaders(opts):
         dict: {"train": dataloader, "val": dataloader, "test": dataloader}
     """
 
-    lims = {
-        f"{mode}": opts.get("limit", {}).get(mode, -1)
-        for mode in ["train", "val", "test"]
-    }
+    datasets = create_datasets(opts)
 
-    path = opts.data_folder
-    sequence_length = opts.sequence_length
-    batch_size = opts.batch_size
-    dataset_type = opts.dataset_type
     workers = opts.workers
-    force_rebase = opts.get("force_rebase")
+    batch_size = opts.batch_size
 
-    path = Path(path).expanduser().resolve()
-    datasets = create_datasets(
-        path,
-        sequence_length,
-        dataset_type,
-        force_rebase,
-        lims["train"],
-        lims["val"],
-        lims["test"],
-    )
     return {
         k: DataLoader(
             v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers

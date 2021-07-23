@@ -187,6 +187,19 @@ class SpaceTimeMetrics(BaseLoss):
         self.args = []
 
 
+class Unet3DLoss(BaseLoss):
+    def set_args(self, inputs, predictions, model):
+        """
+        Compute the weighted loss with respect to targets and predictions
+
+        Args:
+            inputs (dict): dictionnary of target values
+            predictions (dict): dictionnary of predicted values
+        """
+
+        self.args = {"reconstruction": (inputs, predictions)}
+
+
 def get_loss_and_metrics(opts):
     loss_type = opts.get("loss_type")
     metrics_type = opts.get("metrics_type")
