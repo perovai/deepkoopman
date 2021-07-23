@@ -151,7 +151,6 @@ dropout: 0.3
 comet:
   use: true
   project_name: aiphysim
-  workspace: vict0rsch
 
 early: # early_stopping params
   patience: 10

@@ -31,11 +31,7 @@ if __name__ == "__main__":
     opts.output_path = make_output_dir(opts.output_path, dev=opts.get("dev"))
 
     if opts.comet.use:
-        exp = Experiment(
-            workspace=opts.comet.workspace,
-            project_name=opts.comet.project_name,
-            **COMET_KWARGS
-        )
+        exp = Experiment(project_name=opts.comet.project_name, **COMET_KWARGS)
         exp.set_name(opts.output_path.name)
         upload_code_and_parameters(exp, opts)
 
