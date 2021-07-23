@@ -1,15 +1,17 @@
+import ast
 import os
+from collections import defaultdict
 from os.path import expandvars
 from pathlib import Path
+from time import time
 
+import numpy as np
 import torch
 import yaml
 from addict import Dict
 from comet_ml import Experiment
 from funkybob import RandomNameGenerator
 from yaml import safe_load
-
-from aiphysim.opts import Opts
 
 COMET_KWARGS = {
     "auto_metric_logging": False,
@@ -20,6 +22,8 @@ COMET_KWARGS = {
 }
 
 KNOWN_TASKS = set(["discrete", "pendulum", "fluidbox", "attractor"])
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def mem_size(model):
@@ -61,37 +65,43 @@ def resolve(path):
     return Path(expandvars(str(path))).expanduser().resolve()
 
 
-def load_opts(path="./config/opts.yaml", task=None, known_tasks=KNOWN_TASKS):
+def load_opts(defaults=ROOT / "config/defaults.yaml", task=None, task_yaml=None):
     """
     Load opts from a yaml config for a specific task
 
     Returns:
-        aiphysim.Opts: dot-accessible dict
+        addict.Dict: dot-accessible dict
     """
-    p = resolve(path)
-    print("Loading parameters from {}".format(str(p)))
+    p = resolve(defaults)
+    print("Loading default parameters from {}".format(str(p)))
     with p.open("r") as f:
         all_params = safe_load(f)
 
-    if task is None:
-        if "task" not in all_params:
-            raise ValueError("No task provided or in the opts yaml file")
-        task = all_params["task"]
-    else:
-        all_params["task"] = task
-
-    params = {}
-    for key, value in all_params.items():
-        if isinstance(value, dict):
-            if any(k in known_tasks for k in value):
-                if task in value:
-                    params[key] = value[task]
-            else:
-                params[key] = value
+    if task_yaml is None:
+        if task is None:
+            if "task" not in all_params:
+                raise ValueError("No task or task_yaml provided")
+            task = all_params["task"]
         else:
-            params[key] = value
+            all_params["task"] = task
 
-    return Opts(params)
+        task_yaml = (
+            Path(__file__).parent.parent
+            / "config"
+            / "tasks"
+            / f'{all_params["task"]}.yaml'
+        )
+    else:
+        task_yaml = resolve(task_yaml)
+
+    print("Updating default parameters from {}".format(str(task_yaml)))
+
+    with task_yaml.open("r") as f:
+        task_params = yaml.safe_load(f)
+
+    all_params.update(task_params)
+
+    return Dict(all_params)
 
 
 def new_unique_path(path):
@@ -177,7 +187,7 @@ def get_optimizer(opts, model):
     return optimizer, scheduler
 
 
-def upload_code_and_parameters(exp: Experiment, opts: Opts):
+def upload_code_and_parameters(exp: Experiment, opts: Dict):
     # code
     py_files = []
     py_files += list(Path(__file__).resolve().parent.parent.glob("./*.py"))
@@ -274,3 +284,36 @@ def clean_checkpoints(path, n_max=5):
 
     sorted_ckpts = sorted(ckpts, key=lambda c: float(c.stem.split("loss_")[-1]))
     os.remove(sorted_ckpts[-1])
+
+
+def dat_to_array(fname, shape=3):
+    with resolve(fname).open("r") as f:
+        lines = f.readlines()
+    values = [list(map(ast.literal_eval, line.strip().split())) for line in lines]
+    matrix = [
+        [v for value_tuple in tuple_list for v in value_tuple] for tuple_list in values
+    ]
+    array = np.array(matrix)
+
+    return np.reshape(array, (-1, shape, array.shape[-1]))
+
+
+def timeit(func):
+    def wrapper_time(*args, **kwargs):
+        # https://math.stackexchange.com/questions/106700/incremental-averageing
+        self = args[0]
+        if not hasattr(self, "_times"):
+            self._times = defaultdict(list)
+        if not hasattr(self, "_mean_times"):
+            self._mean_times = defaultdict(int)
+        t = time()
+        return_values = func(*args, **kwargs)
+        new_duration = time() - t
+        self._times[func.__name__].append(new_duration)
+        n = len(self._times[func.__name__])
+        m = self._mean_times[func.__name__]
+        self._mean_times[func.__name__] = m + (new_duration - m) / n
+
+        return return_values
+
+    return wrapper_time

@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from aiphysim.utils import resolve
 
 from .dataloader_spacetime import RB2DataLoader
-from .density_dataset import DensityDataset
+from .density_dataset import DatDensityDataset, H5DensityDataset
 from .koopman_dataset import KoopmanDataset
 
 
@@ -19,6 +19,7 @@ def create_datasets(opts):
     path = resolve(opts.data_folder)
     sequence_length = opts.sequence_length
     dataset_type = opts.dataset_type
+    force_rebase = opts.get("force_rebase")
 
     if dataset_type == "koopman":
         print("Creating datasets from ", str(path))
@@ -32,13 +33,22 @@ def create_datasets(opts):
             "test": KoopmanDataset(test_files, sequence_length, lims["test"]),
         }
 
-    if dataset_type == "density":
+    if dataset_type == "h5density":
         train_files = list(Path(path).glob("train_*.h5"))
         val_files = list(Path(path).glob("val_*.h5"))
 
         return {
-            "train": DensityDataset(train_files, lims["train"]),
-            "val": DensityDataset(val_files, lims["val"]),
+            "train": H5DensityDataset(train_files, lims["train"]),
+            "val": H5DensityDataset(val_files, lims["val"]),
+        }
+
+    if dataset_type == "datdensity":
+        train_files = list(Path(path).glob("train_*.json"))
+        val_files = list(Path(path).glob("val_*.json"))
+
+        return {
+            "train": DatDensityDataset(train_files, lims["train"], force_rebase),
+            "val": DatDensityDataset(val_files, lims["val"], force_rebase),
         }
 
     if dataset_type == "spacetime":

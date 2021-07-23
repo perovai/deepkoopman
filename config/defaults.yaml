@@ -17,7 +17,7 @@ dataset_type: koopman
 # -----  MODEL  -----
 # -------------------
 
-model_type: koopman
+model_type: <PLACEHOLDER>
 
 ## omega net (auxiliary function)
 num_complex_pairs:
@@ -76,7 +76,7 @@ latent_dim:
   fluidbox: 3
   attractor: 3
 
-loss_type: koopman # loss processing scheme
+loss_type: <PLACEHOLDER> # loss processing scheme
 
 losses: # individual loss functions to use
   discrete:
@@ -146,10 +146,11 @@ optimizer:
   lr: 0.0001
   scheduler: plateau
 
+dropout: 0.3
+
 comet:
   use: true
   project_name: aiphysim
-  workspace: vict0rsch
 
 early: # early_stopping params
   patience: 10

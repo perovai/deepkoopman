@@ -1,3 +1,4 @@
+from .density import DynamicLatentModel
 from .koopman import DeepKoopman
 from .spacetime import SpaceTime
 from .unet import UNet3d
@@ -8,6 +9,8 @@ def create_model(opts):
         return DeepKoopman(opts)
     if opts.model_type == "spacetime":
         return SpaceTime(opts)
+    if opts.model_type == "density":
+        return DynamicLatentModel(opts)
     if opts.model_type == "3dunet":
         return UNet3d(opts)
 

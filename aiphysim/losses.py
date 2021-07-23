@@ -3,25 +3,21 @@ import traceback as tb
 import numpy as np
 import torch
 
+from aiphysim.utils import timeit
+
 
 class BaseLoss:
-    def __init__(self, opts, is_loss=False):
+    def __init__(self, opts, is_loss=True):
         self.weights = (
             {name: float(weight) for name, weight in opts.weights.items()}
             if is_loss
-            else None
+            else {}
         )
-        self.loss_funcs = {
-            loss_name: getattr(BaseLoss, loss_name)
-            for loss_name in (opts.losses if is_loss else opts.metrics)
-        }
+
         self.is_loss = is_loss
 
-        self.shifts = np.arange(opts.num_shifts) + 1
-        self.middle_shifts = np.arange(opts.num_shifts_middle) + 1
-
     @staticmethod
-    def reconstruction(reconstruction, state):
+    def mse(reconstruction, state):
         return torch.nn.functional.mse_loss(reconstruction, state)
 
     @staticmethod
@@ -58,9 +54,9 @@ class BaseLoss:
 
     @staticmethod
     def l2(model):
-        l2_reg = torch.tensor(0.0)
+        l2_reg = 0
         for param in model.parameters():
-            l2_reg += torch.norm(param)
+            l2_reg = l2_reg + torch.norm(param)
         return l2_reg
 
     @staticmethod
@@ -73,6 +69,7 @@ class BaseLoss:
         mse = torch.nn.functional.mse_loss(predictions, targets, reduction="none")
         return torch.transpose(mse, 1, 0).reshape(mse.shape[1], -1).mean(-1)
 
+    @timeit
     def compute(self, *args):
         self.set_args(*args)
 
@@ -81,16 +78,42 @@ class BaseLoss:
         if self.is_loss:
             losses["total"] = 0.0
 
-        for name, loss in self.loss_funcs.items():
-            if name in self.args:
+        for loss_params in self.args:
+
+            # args are
+            #
+            # (function_type, tuple(args))
+            # or
+            # (function_type, function_name, tuple(args))
+            #
+            # function_name is used to differentiate 2 identical losses
+            # applied to different inputs
+
+            if len(loss_params) == 3:
+                loss_func, loss_name, loss_args = loss_params
+            else:
+                loss_func, loss_args = loss_params
+                loss_name = loss_func
+
+            if hasattr(self, loss_func):
                 try:
-                    losses[name] = loss(*self.args[name])
+                    weight = float(self.weights.get(loss_name, 1))
+                    if weight <= 0:
+                        continue
+
+                    loss = getattr(self, loss_func)
+                    losses[loss_name] = loss(*loss_args)
                     if self.is_loss:
-                        weight = float(self.weights.get(name, 1))
-                        losses["total"] += losses[name] * weight
+                        losses["total"] += losses[loss_name] * weight
+
                 except Exception as e:
                     print(
-                        "Error in loss", name, "with weight", self.weights.get(name, 1)
+                        ">>> Error in loss",
+                        loss_name,
+                        "for func",
+                        loss_func,
+                        "with weight",
+                        self.weights.get(loss_name, 1),
                     )
                     print("\n" + tb.format_exc())
                     raise Exception(e)
@@ -98,6 +121,12 @@ class BaseLoss:
 
 
 class KoopmanLoss(BaseLoss):
+    def __init__(self, opts, is_loss=False):
+        super().__init__(opts, is_loss)
+
+        self.shifts = np.arange(opts.num_shifts) + 1
+        self.middle_shifts = np.arange(opts.num_shifts_middle) + 1
+
     def set_args(self, inputs, predictions, model):
         """
         Compute the weighted loss with respect to targets and predictions
@@ -109,7 +138,7 @@ class KoopmanLoss(BaseLoss):
         embedding, y, latent_evol = predictions
 
         self.args = {
-            "reconstruction": (inputs[0, :, :], y[0]),
+            "mse": (inputs[0, :, :], y[0]),
             "prediction": (inputs, y, self.shifts),
             "linear": (embedding, latent_evol, self.middle_shifts),
             "l2": (model,),
@@ -117,20 +146,45 @@ class KoopmanLoss(BaseLoss):
         }
 
 
-class SpaceTimeLoss(BaseLoss):
-    def set_args(self, inputs, predictions, model):
+class DensityLoss(BaseLoss):
+    def set_args(self, batch, predictions, model):
 
-        self.args = {
-            # TODO
-        }
+        encoded_ts, decoded_ts, next_zs, next_decoded_ts = predictions
+
+        time_series = batch["data"]
+
+        self.args = [
+            ("l2", (model,)),
+            ("mse", "mse_latent", (encoded_ts[1:], next_zs[:-1])),
+            ("mse", "mse_next_decoded", (time_series[1:], next_decoded_ts[:-1])),
+            ("mse", "mse_decoded", (time_series, decoded_ts)),
+        ]
+
+
+class DensityMetrics(BaseLoss):
+    def set_args(self, batch, predictions, model):
+
+        encoded_ts, decoded_ts, next_zs, next_decoded_ts = predictions
+        time_series = batch["data"]
+
+        self.args = [
+            ("l2", (model,)),
+            ("mse", "mse_latent", (encoded_ts[1:], next_zs[:-1])),
+            ("mse", "mse_next_decoded", (time_series[1:], next_decoded_ts[:-1])),
+            ("mse", "mse_decoded", (time_series, decoded_ts)),
+        ]
+
+
+class SpaceTimeLoss(BaseLoss):
+    def set_args(self, batch, predictions, model):
+
+        self.args = []
 
 
 class SpaceTimeMetrics(BaseLoss):
-    def set_args(self, inputs, predictions, model):
+    def set_args(self, batch, predictions, model):
 
-        self.args = {
-            # TODO
-        }
+        self.args = []
 
 
 class Unet3DLoss(BaseLoss):
@@ -156,12 +210,16 @@ def get_loss_and_metrics(opts):
         loss = KoopmanLoss(opts)
     elif loss_type == "spacetime":
         loss = SpaceTimeLoss(opts)
+    elif loss_type == "density":
+        loss = DensityLoss(opts)
     else:
         raise ValueError("Unknown loss type: " + str(loss_type))
 
     if metrics_type == "spacetime":
-        metrics = SpaceTimeMetrics(opts, True)
+        metrics = SpaceTimeMetrics(opts, False)
+    elif metrics_type == "density":
+        metrics = DensityMetrics(opts, False)
     else:
-        raise ValueError("Unknown loss type: " + str(metrics_type))
+        raise ValueError("Unknown metrics type: " + str(metrics_type))
 
     return loss, metrics

@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from addict import Dict
 from comet_ml import ExistingExperiment, Experiment
 from tqdm import tqdm
 
@@ -7,7 +8,6 @@ from aiphysim.dataloading import create_dataloaders
 from aiphysim.logger import Logger
 from aiphysim.losses import get_loss_and_metrics
 from aiphysim.models import create_model
-from aiphysim.opts import Opts
 from aiphysim.plots import plot_2D_comparative_trajectories
 from aiphysim.utils import (
     COMET_KWARGS,
@@ -18,6 +18,7 @@ from aiphysim.utils import (
     mem_size,
     num_params,
     resolve,
+    timeit,
 )
 
 
@@ -46,8 +47,7 @@ class Trainer:
         opts_path = path / "opts.yaml"
         assert opts_path.exists()
         opts = load_opts(opts_path)
-        breakpoint()
-        if isinstance(overrides, (Opts, dict)):
+        if isinstance(overrides, (Dict, dict)):
             opts.update(overrides)
 
         if exp_type == "new":
@@ -131,7 +131,7 @@ class Trainer:
                 self.exp,
                 n_train=len(self.loaders["train"]),
                 n_val=len(self.loaders["val"]),
-                n_test=len(self.loaders["test"]),
+                n_test=len(self.loaders.get("test", [])),
             )
             # create optimizer from opts
             self.optimizer, self.scheduler = get_optimizer(self.opts, self.model)
@@ -176,6 +176,7 @@ class Trainer:
         batch = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
         return batch.to(self.device)
 
+    @timeit
     def run_step(self, batch):
         """
         Execute a training step:
@@ -186,10 +187,9 @@ class Trainer:
         """
         self.optimizer.zero_grad()
 
-        state = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
-        predictions = self.model.forward(state)
+        predictions = self.model.forward(batch, self.device)
 
-        train_losses = self.losses.compute(state, predictions, self.model)
+        train_losses = self.losses.compute(batch, predictions, self.model)
         train_losses["total"].backward()
 
         self.optimizer.step()
@@ -197,13 +197,14 @@ class Trainer:
         self.logger.global_step += 1
         self.logger.log_step(train_losses)
 
+    @timeit
     def run_epoch(self):
         """
         Iterate over the entire train data-loader
         """
         self.model.train()
         for self.logger.batch_id, batch in enumerate(self.loaders["train"]):
-            batch = batch.to(self.device)
+            batch = self.to_device(batch)
             self.run_step(batch)
 
     def train(self):
@@ -265,6 +266,7 @@ class Trainer:
                 self.opts.output_path / "final_traj_plot.png",
             )
 
+    @timeit
     @torch.no_grad()
     def run_evaluation(self):
         """
@@ -274,24 +276,36 @@ class Trainer:
             float: validation loss
         """
         self.model.eval()
-        losses = None
+        losses = metrics = None
         print()
         for batch in tqdm(self.loaders["val"]):
-            batch = batch.to(self.device)
 
-            state = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
-            predictions = self.model.forward(state)
+            batch = self.to_device(batch)
 
-            val_losses = self.losses.compute(state, predictions, self.model)
+            predictions = self.model.forward(batch)
+
+            val_losses = self.losses.compute(batch, predictions, self.model)
+            val_metrics = self.metrics.compute(batch, predictions, self.model)
+
             if losses is None:
                 losses = {k: [] for k in val_losses}
+                metrics = {k: [] for k in val_metrics}
+
             for k, v in val_losses.items():
                 losses[k].append(v)
+            for k, v in val_metrics.items():
+                metrics[k].append(v)
         losses = {k: np.mean([lv.cpu().item() for lv in v]) for k, v in losses.items()}
+        metrics = {
+            k: np.mean([lv.cpu().item() for lv in v]) for k, v in metrics.items()
+        }
+
         self.logger.log_step(losses, mode="val")
+        self.logger.log_step(metrics, mode="val")
         print()
         return losses["total"]
 
+    @timeit
     def save(self, loss=None, name=None):
 
         # if epoch is not provided just save as "latest.ckpt"
@@ -347,3 +361,16 @@ class Trainer:
             self.optimizer.load_state_dict(state_dict["optimizer_state_dict"])
         if hasattr(self, "scheduler") and self.scheduler:
             self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
+
+    @timeit
+    def to_device(self, item):
+        if isinstance(item, (torch.Tensor, torch.nn.Module)):
+            return item.to(self.device)
+
+        if isinstance(item, list):
+            return [self.to_device(i) for i in item]
+
+        if isinstance(item, dict):
+            return {k: self.to_device(v) for k, v in item.items()}
+
+        return item

@@ -1,9 +1,57 @@
+import json
+from pathlib import Path
+
 import h5py
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from aiphysim.utils import dat_to_array
 
-class DensityDataset(Dataset):
+
+class DatDensityDataset(Dataset):
+    def __init__(self, json_files, limit=-1, force_rebase=None) -> None:
+        super().__init__()
+
+        self.labels = {}
+
+        for json_file in json_files:
+            with open(json_file, "r") as f:
+                self.labels.update({Path(k): v for k, v in json.load(f).items()})
+            if limit > 0 and len(self.labels) > limit:
+                break
+
+        self.paths = list(self.labels.keys())
+
+        if limit > 0:
+            self.paths = self.paths[:limit]
+            self.labels = {k: self.labels[k] for k in self.paths}
+
+        if force_rebase is not None:
+            assert isinstance(force_rebase, dict)
+            assert "from" in force_rebase
+            assert "to" in force_rebase
+
+            self.labels = {
+                Path(force_rebase["to"]) / k.relative_to(force_rebase["from"]): v
+                for k, v in self.labels.items()
+            }
+            self.paths = list(self.labels.keys())
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, index):
+        return {
+            "data": torch.from_numpy(
+                dat_to_array(self.paths[index]).astype(np.float32)
+            ),
+            "labels": self.labels[self.paths[index]],
+            "path": str(self.paths[index]),
+        }
+
+
+class H5DensityDataset(Dataset):
     def __init__(self, h5_paths, limit=-1):
         self.limit = limit
         self.h5_paths = h5_paths

@@ -8,19 +8,14 @@ from aiphysim.utils import new_unique_path  # noqa: E402
 
 if __name__ == "__main__":
 
-    tasks = [
-        "discrete",
-        "pendulum",
-        "fluidbox",
-        "attractor",
-    ]
+    tasks = ["density", "spacetime"]
 
     params = {
         "epochs": 1,
-        "batch_size": 64,
+        "batch_size": 32,
         "workers": 2,
-        "limit.train": -1,
-        "dev": True,
+        "limit.train": 64,
+        "limit.val": 64,
         "comet.use": False,
     }
 

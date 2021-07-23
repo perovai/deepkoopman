@@ -75,21 +75,20 @@ python rayleigh-benard.py --lx [lx] --lz [lz] --nx [nx] --nz [nz] --train [train
 The trainer/model opts are not your regular dict, rather an `addict`: check out [addict](https://github.com/mewwts/addict) to have dot access:
 
 ```python
-from aiphysim.utils import Opts
+from addict import Dict
 
-opts = Opts({"losses": {"recon": True, "koopman": True}})
+opts = Dict({"losses": {"recon": True, "koopman": True}})
 opts.epochs = 4
 opts.batch_size = 8
+print(opts.batch_size)
+print(opts.unknown)
 print(opts.losses.recon)
-opts.unknown
 ```
 
 prints:
 
 ```python
 True
-...
-KeyError: 'unknown'
 ```
 
 ### opts.yaml
