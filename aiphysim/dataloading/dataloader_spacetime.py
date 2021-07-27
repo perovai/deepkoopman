@@ -50,7 +50,7 @@ class RB2DataLoader(Dataset):
         self.mode = mode
         self.normalize = normalize
         self.timesteps = timesteps
-        
+
         hdata = h5py.File(os.path.join(self.data_dir, self.data_filename), "r")
 
         nt = hdata["tasks"]["u"].shape[0]

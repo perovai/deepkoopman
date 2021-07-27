@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from torch.utils.data import DataLoader
@@ -54,16 +53,39 @@ def create_datasets(opts):
 
     if dataset_type == "spacetime":
         ratios = {
-        f"{mode}": opts.get("ratio", {}).get(mode, -1)
-        for mode in ["train", "val"]
-    }
+            f"{mode}": opts.get("ratio", {}).get(mode, -1) for mode in ["train", "val"]
+        }
         normalize = opts.normalize
         timesteps = opts.timesteps
 
         return {
-            "train": RB2DataLoader(path, 'snapshots.h5', 'train', ratios["train"], ratios["val"], normalize, timesteps),
-            "val": RB2DataLoader(path, 'snapshots.h5', 'val', ratios["train"], ratios["val"], normalize, timesteps),
-            "test": RB2DataLoader(path, 'snapshots.h5', 'test', ratios["train"], ratios["val"], normalize, timesteps),
+            "train": RB2DataLoader(
+                path,
+                "snapshots.h5",
+                "train",
+                ratios["train"],
+                ratios["val"],
+                normalize,
+                timesteps,
+            ),
+            "val": RB2DataLoader(
+                path,
+                "snapshots.h5",
+                "val",
+                ratios["train"],
+                ratios["val"],
+                normalize,
+                timesteps,
+            ),
+            "test": RB2DataLoader(
+                path,
+                "snapshots.h5",
+                "test",
+                ratios["train"],
+                ratios["val"],
+                normalize,
+                timesteps,
+            ),
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))
