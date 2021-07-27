@@ -132,8 +132,8 @@ class KoopmanLoss(BaseLoss):
         Compute the weighted loss with respect to targets and predictions
 
         Args:
-            targets (dict): dictionnary of target values
-            predictions (dict): dictionnary of predicted values
+            targets (dict): dictionary of target values
+            predictions (dict): dictionary of predicted values
         """
         embedding, y, latent_evol = predictions
 
@@ -193,8 +193,8 @@ class Unet3DLoss(BaseLoss):
         Compute the weighted loss with respect to targets and predictions
 
         Args:
-            inputs (dict): dictionnary of target values
-            predictions (dict): dictionnary of predicted values
+            inputs (dict): dictionary of target values
+            predictions (dict): dictionary of predicted values
         """
 
         self.args = {"reconstruction": (inputs, predictions)}
