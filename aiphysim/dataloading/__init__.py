@@ -2,7 +2,7 @@ from pathlib import Path
 
 from torch.utils.data import DataLoader
 
-from aiphysim.utils import resolve
+from aiphysim.utils import load_opts, resolve
 
 from .dataloader_spacetime import RB2DataLoader
 from .density_dataset import DatDensityDataset, H5DensityDataset
@@ -63,7 +63,7 @@ def create_datasets(opts):
     raise ValueError("Unknown dataset type: " + str(dataset_type))
 
 
-def create_dataloaders(opts):
+def create_dataloaders(opts, verbose=1):
     """
     Return a dict of data loaders with keys train/val/test
 
@@ -81,9 +81,17 @@ def create_dataloaders(opts):
     workers = opts.workers
     batch_size = opts.batch_size
 
-    return {
+    loaders = {
         k: DataLoader(
             v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers
         )
         for k, v in datasets.items()
     }
+
+    if verbose > 0:
+        print()
+        for mode, loader in loaders.items():
+            print(f"Found {len(loader.dataset)} samples in the {mode} dataset")
+        print()
+
+    return loaders

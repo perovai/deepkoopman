@@ -114,6 +114,6 @@ class DynamicLatentModel(nn.Module):
         return encoded_ts, decoded_ts, next_zs, next_decoded_ts
 
     @timeit
-    def forward(self, batch, device="cpu"):
-        time_series = batch["data"].to(device)
+    def forward(self, batch):
+        time_series = batch["data"]
         return self.one_step_predictions(time_series)
