@@ -1,5 +1,5 @@
-data_folder: /network/tmp1/schmidtv/perovai
-dataset_type: datdensity
+data_folder: /network/projects/_groups/aiphysim_users/dedalus_data
+dataset_type: datdensity # TODO: SM: what is dataset_type? 
 batch_size: 32
 density_matrix_shape: [3, 6]
 
