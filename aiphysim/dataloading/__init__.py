@@ -89,8 +89,8 @@ def create_dataloaders(opts, verbose=1):
     }
 
     if verbose > 0:
+        print()
         for mode, loader in loaders.items():
-            print()
             print(f"Found {len(loader.dataset)} samples in the {mode} dataset")
         print()
 
