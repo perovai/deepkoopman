@@ -12,8 +12,9 @@ encoder_widths: [128, 128, 128] # (input x width, ..., width x latent_dim)
 latent_hidden_size: 128
 latent_num_layers: 2
 
-loss_type: density
-metrics_type: density
+#TODO: SM: add functional spacetime losses
+loss_type: spacetime
+metrics_type: spacetime
 
 weights:
   l2: 1e-7
