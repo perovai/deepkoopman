@@ -178,13 +178,25 @@ class DensityMetrics(BaseLoss):
 class SpaceTimeLoss(BaseLoss):
     def set_args(self, batch, predictions, model):
 
-        self.args = []
+        encoded_ts, decoded_ts, next_zs, next_decoded_ts = predictions
+
+        time_series = batch["data"]
+
+        self.args = [
+            ("l2", (model,)),
+        ]
 
 
 class SpaceTimeMetrics(BaseLoss):
     def set_args(self, batch, predictions, model):
 
-        self.args = []
+        encoded_ts, decoded_ts, next_zs, next_decoded_ts = predictions
+
+        time_series = batch["data"]
+
+        self.args = [
+            ("l2", (model,)),
+        ]
 
 
 class Unet3DLoss(BaseLoss):
