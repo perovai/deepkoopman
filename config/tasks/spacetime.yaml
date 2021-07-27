@@ -1,0 +1,21 @@
+data_folder: /network/tmp1/schmidtv/perovai
+dataset_type: datdensity
+batch_size: 32
+density_matrix_shape: [3, 6]
+
+model_type: density
+input_dim: 18
+latent_dim: 6
+encoder_widths: [128, 128, 128] # (input x width, ..., width x latent_dim)
+
+latent_hidden_size: 128
+latent_num_layers: 2
+
+loss_type: density
+metrics_type: density
+
+weights:
+  l2: 1e-7
+  mse_latent: 1
+  mse_next_decoded: 1
+  mse_decoded: 1
