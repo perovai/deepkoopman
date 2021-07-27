@@ -187,7 +187,7 @@ class Trainer:
         """
         self.optimizer.zero_grad()
 
-        predictions = self.model.forward(batch, self.device)
+        predictions = self.model.forward(batch)
 
         train_losses = self.losses.compute(batch, predictions, self.model)
         train_losses["total"].backward()
