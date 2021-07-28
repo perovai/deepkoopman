@@ -173,8 +173,7 @@ class Trainer:
         """
         assert self.is_setup
         batch = next(iter(self.loaders[mode]))
-        batch = batch.reshape(-1, batch.shape[0], self.opts.input_dim)
-        return batch.to(self.device)
+        return self.to_device(batch)
 
     @timeit
     def run_step(self, batch):

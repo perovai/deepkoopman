@@ -10,6 +10,18 @@ from .koopman_dataset import KoopmanDataset
 
 
 def create_datasets(opts):
+    """
+    Creates the appropriate dataset according to opts.dataset_type
+
+    Args:
+        opts (addict.Dict): options dictionnary
+
+    Raises:
+        ValueError: If the dataset_type is unknown
+
+    Returns:
+        dict: dictionnary mapping mode (train/val/test) to dataset
+    """
 
     lims = {
         f"{mode}": opts.get("limit", {}).get(mode, -1)
@@ -68,12 +80,11 @@ def create_dataloaders(opts, verbose=1):
     Return a dict of data loaders with keys train/val/test
 
     Args:
-        path (pathlike): Path to read the data from
-        sequence_length (int): How to reshape the data from N x dim to B x seq x dim
-        batch_size (int): Batch size
+        opts (addict.Dict): options dictionnary
+        verbose (int): whether or not to print dataset lengths
 
     Returns:
-        dict: {"train": dataloader, "val": dataloader, "test": dataloader}
+        dict: dictionnary mapping mode (train/val/test) to dataloader
     """
 
     datasets = create_datasets(opts)
