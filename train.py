@@ -1,3 +1,5 @@
+import atexit
+
 import minydra
 from addict import Dict
 from comet_ml import Experiment
@@ -12,6 +14,23 @@ from aiphysim.utils import (
 )
 
 exp = None
+
+
+def print_times(trainer, name="Trainer"):
+    if hasattr(trainer, "_mean_times"):
+        print(f"\n{name}'s average processing times:")
+        for func_name, mean_time in trainer._mean_times.items():
+            print(
+                f"  {func_name:15}: {mean_time:.3f}s",
+                f"({len(trainer._times[func_name])})",
+            )
+        print()
+    else:
+        print(f"No _mean_times to print for {name}, exiting.")
+
+    if name == "Trainer":
+        print_times(trainer.model, "Model")
+
 
 if __name__ == "__main__":
 
@@ -38,6 +57,7 @@ if __name__ == "__main__":
     trainer = Trainer(opts, exp).setup()
 
     save_config(trainer.opts, exp)
+    atexit.register(print_times, trainer)
 
     trainer.train()
 
