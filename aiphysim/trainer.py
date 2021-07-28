@@ -361,7 +361,6 @@ class Trainer:
         if hasattr(self, "scheduler") and self.scheduler:
             self.scheduler.load_state_dict(state_dict["scheduler_state_dict"])
 
-    @timeit
     def to_device(self, item):
         if isinstance(item, (torch.Tensor, torch.nn.Module)):
             return item.to(self.device)
