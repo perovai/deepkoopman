@@ -52,16 +52,28 @@ def create_datasets(opts):
         }
 
     if dataset_type == "spacetime":
+        if "dataset_file" in opts:
+            dataset_file = opts.dataset_file
+        else:
+            dataset_file = "snapshots.h5"
         ratios = {
             f"{mode}": opts.get("ratio", {}).get(mode, -1) for mode in ["train", "val"]
         }
-        normalize = opts.normalize
-        timesteps = opts.timesteps
+
+        if "normalize" in opts:
+            normalize = opts.normalize
+        else:
+            normalize = True
+
+        try:
+            timesteps = opts.timesteps
+        except Exception as e:
+            raise KeyError(e)
 
         return {
             "train": RB2DataLoader(
                 path,
-                "snapshots.h5",
+                dataset_file,
                 "train",
                 ratios["train"],
                 ratios["val"],
@@ -70,7 +82,7 @@ def create_datasets(opts):
             ),
             "val": RB2DataLoader(
                 path,
-                "snapshots.h5",
+                dataset_file,
                 "val",
                 ratios["train"],
                 ratios["val"],
@@ -79,7 +91,7 @@ def create_datasets(opts):
             ),
             "test": RB2DataLoader(
                 path,
-                "snapshots.h5",
+                dataset_file,
                 "test",
                 ratios["train"],
                 ratios["val"],
