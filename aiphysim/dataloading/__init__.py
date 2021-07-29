@@ -64,12 +64,52 @@ def create_datasets(opts):
         }
 
     if dataset_type == "spacetime":
-        dataset_file = list(Path(path).glob("snapshots.h5"))[0]
+        if "dataset_file" in opts:
+            dataset_file = opts.dataset_file
+        else:
+            dataset_file = "snapshots.h5"
+        ratios = {
+            f"{mode}": opts.get("ratio", {}).get(mode, -1) for mode in ["train", "val"]
+        }
+
+        if "normalize" in opts:
+            normalize = opts.normalize
+        else:
+            normalize = True
+
+        try:
+            timesteps = opts.timesteps
+        except Exception as e:
+            raise KeyError(e)
 
         return {
-            "train": RB2DataLoader(path, dataset_file, lims["train"]),
-            "val": RB2DataLoader(path, dataset_file, lims["val"]),
-            "test": RB2DataLoader(path, dataset_file, lims["test"]),
+            "train": RB2DataLoader(
+                path,
+                dataset_file,
+                "train",
+                ratios["train"],
+                ratios["val"],
+                normalize,
+                timesteps,
+            ),
+            "val": RB2DataLoader(
+                path,
+                dataset_file,
+                "val",
+                ratios["train"],
+                ratios["val"],
+                normalize,
+                timesteps,
+            ),
+            "test": RB2DataLoader(
+                path,
+                dataset_file,
+                "test",
+                ratios["train"],
+                ratios["val"],
+                normalize,
+                timesteps,
+            ),
         }
 
     raise ValueError("Unknown dataset type: " + str(dataset_type))

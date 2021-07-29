@@ -51,13 +51,13 @@ class RB2DataLoader(Dataset):
         self.normalize = normalize
         self.timesteps = timesteps
 
-        # concatenating pressure, temperature, x-velocity, and z-velocity as a 4 channel array: pbuw
         hdata = h5py.File(os.path.join(self.data_dir, self.data_filename), "r")
 
         nt = hdata["tasks"]["u"].shape[0]
 
         mean, std = self.compute_statistics(hdata, train_size)
 
+        # concatenating pressure, temperature, x-velocity, and z-velocity as a 4 channel array: pbuw
         if mode == "train":
             self.data = np.stack(
                 [
