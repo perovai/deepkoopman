@@ -100,7 +100,7 @@ class Trainer:
 
         # set input dim based on data formatting
         if "input_dim" not in self.opts:
-            if hasattr(self, "loaders"):
+            if hasattr(self.loaders["train"].dataset, "input_dim"):
                 self.opts.input_dim = self.loaders["train"].dataset.input_dim
 
         # find device
