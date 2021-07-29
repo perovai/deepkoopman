@@ -102,11 +102,6 @@ class Trainer:
         if "input_dim" not in self.opts:
             if hasattr(self, "loaders"):
                 self.opts.input_dim = self.loaders["train"].dataset.input_dim
-            else:
-                raise ValueError(
-                    "Setup Error: cannot setup a trainer with "
-                    + "no loaders and no `input_dim` in its opts"
-                )
 
         # find device
         if torch.cuda.is_available():
@@ -245,25 +240,26 @@ class Trainer:
                 print("\nEarlyStopping: Patience exceeded, stopping training\n")
                 break
 
-        if self.opts.input_dim == 2:
-            val_trajs_len = (
-                self.opts.val_trajectories.length
-                if self.opts.val_trajectories.length > 0
-                else self.opts.sequence_length
-            )
-            batch = next(iter(self.loaders["val"]))
-            batch = batch[: self.opts.val_trajectories.n].to(self.device)
+        if "input_dim" in self.opts:
+            if self.opts.input_dim == 2:
+                val_trajs_len = (
+                    self.opts.val_trajectories.length
+                    if self.opts.val_trajectories.length > 0
+                    else self.opts.sequence_length
+                )
+                batch = next(iter(self.loaders["val"]))
+                batch = batch[: self.opts.val_trajectories.n].to(self.device)
 
-            best_state = torch.load(str(self.opts.output_path / "best.ckpt"))
-            self.model.load_state_dict(best_state["model_state_dict"])
-            plot_2D_comparative_trajectories(
-                self.model,
-                batch,
-                val_trajs_len,
-                self.opts.val_trajectories.n_per_plot,
-                self.exp,
-                self.opts.output_path / "final_traj_plot.png",
-            )
+                best_state = torch.load(str(self.opts.output_path / "best.ckpt"))
+                self.model.load_state_dict(best_state["model_state_dict"])
+                plot_2D_comparative_trajectories(
+                    self.model,
+                    batch,
+                    val_trajs_len,
+                    self.opts.val_trajectories.n_per_plot,
+                    self.exp,
+                    self.opts.output_path / "final_traj_plot.png",
+                )
 
     @timeit
     @torch.no_grad()
