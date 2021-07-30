@@ -24,3 +24,8 @@ losses:
 
 weights:
   reconstruction: 1
+
+metrics_type: 3dunet
+
+metrics:
+  - reconstruction
