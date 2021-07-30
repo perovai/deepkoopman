@@ -56,15 +56,7 @@ class ResBlock3D(nn.Module):
 class UNet3d(nn.Module):  # pylint: disable=too-many-instance-attributes
     """UNet that consumes even dimension grid and outputs odd dimension grid."""
 
-    def __init__(
-        self,
-        in_features=4,
-        out_features=32,
-        igres=(4, 32, 32),
-        ogres=None,
-        nf=16,
-        mf=512,
-    ):
+    def __init__(self, opts):
         """initialize 3D UNet.
         Args:
           in_features: int, number of input features.
@@ -77,30 +69,30 @@ class UNet3d(nn.Module):  # pylint: disable=too-many-instance-attributes
           mf: int, a cap for max number of feature layers throughout the network.
         """
         super(UNet3d, self).__init__()
-        self.igres = igres
+        self.igres = opts.igres
 
-        self.nf = nf
-        self.mf = mf
-        self.in_features = in_features
-        self.out_features = out_features
+        self.nf = opts.nf
+        self.mf = opts.mf
+        self.in_features = opts.in_features
+        self.out_features = opts.out_features
 
         # for now ogres must be igres, else not implemented
-        if ogres is None:
+        if opts.ogres is None:
             self.ogres = self.igres
         else:
-            self.ogres = ogres
+            self.ogres = opts.ogres
         # assert integer multipliers of igres
         mul = np.array(self.ogres) / np.array(self.igres)
         fac = np.log2(mul)
         if not np.allclose(fac % 1, np.zeros_like(fac)):
             raise ValueError(
                 "ogres must be 2^k times greater than igres where k >= 0. "
-                "Instead igres: {}, ogres: {}".format(igres, ogres)
+                "Instead igres: {}, ogres: {}".format(opts.igres, opts.ogres)
             )
         if not np.all(fac >= 0):
             raise ValueError(
                 "ogres must be greater or equal to igres. "
-                "Instead igres: {}, ogres: {}".format(igres, ogres)
+                "Instead igres: {}, ogres: {}".format(opts.igres, opts.ogres)
             )
         self.exp_fac = fac.astype(np.int32)
         if not np.allclose(self.exp_fac, np.zeros_like(self.exp_fac)):
