@@ -77,10 +77,10 @@ def create_datasets(opts):
         else:
             normalize = True
 
-        try:
+        if "timesteps" in opts:
             timesteps = opts.timesteps
-        except Exception as e:
-            raise KeyError(e)
+        else:
+            raise Exception("You should provide a value of 'timesteps' in the yaml configuration file!")
 
         return {
             "train": RB2DataLoader(
