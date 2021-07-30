@@ -137,13 +137,13 @@ class KoopmanLoss(BaseLoss):
         """
         embedding, y, latent_evol = predictions
 
-        self.args = {
-            "mse": (inputs[0, :, :], y[0]),
-            "prediction": (inputs, y, self.shifts),
-            "linear": (embedding, latent_evol, self.middle_shifts),
-            "l2": (model,),
-            "inf_norm": (inputs, y),
-        }
+        self.args = [
+            ("mse", (inputs[0, :, :], y[0])),
+            ("prediction", (inputs, y, self.shifts)),
+            ("linear", (embedding, latent_evol, self.middle_shifts)),
+            ("l2", (model,)),
+            ("inf_norm", (inputs, y)),
+        ]
 
 
 class DensityLoss(BaseLoss):
@@ -209,7 +209,7 @@ class Unet3DLoss(BaseLoss):
             predictions (dict): dictionary of predicted values
         """
 
-        self.args = {"reconstruction": (inputs, predictions)}
+        self.args = [("mse", "reconstruction", (inputs, predictions))]
 
 
 def get_loss_and_metrics(opts):
