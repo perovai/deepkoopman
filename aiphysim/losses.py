@@ -212,6 +212,19 @@ class Unet3DLoss(BaseLoss):
         self.args = [("mse", "reconstruction", (inputs, predictions))]
 
 
+class Unet3DMetric(BaseLoss):
+    def set_args(self, inputs, predictions, model):
+        """
+        Compute the weighted loss with respect to targets and predictions
+
+        Args:
+            inputs (dict): dictionary of target values
+            predictions (dict): dictionary of predicted values
+        """
+
+        self.args = [("mse", "reconstruction", (inputs, predictions))]
+
+
 def get_loss_and_metrics(opts):
     loss_type = opts.get("loss_type")
     metrics_type = opts.get("metrics_type")
@@ -224,6 +237,8 @@ def get_loss_and_metrics(opts):
         loss = SpaceTimeLoss(opts)
     elif loss_type == "density":
         loss = DensityLoss(opts)
+    elif loss_type == "3dunet":
+        loss = Unet3DLoss(opts)
     else:
         raise ValueError("Unknown loss type: " + str(loss_type))
 
@@ -231,6 +246,8 @@ def get_loss_and_metrics(opts):
         metrics = SpaceTimeMetrics(opts, False)
     elif metrics_type == "density":
         metrics = DensityMetrics(opts, False)
+    elif metrics_type == "3dunet":
+        metrics = Unet3DMetric(opts, False)
     else:
         raise ValueError("Unknown metrics type: " + str(metrics_type))
 
