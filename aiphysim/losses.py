@@ -200,7 +200,7 @@ class SpaceTimeMetrics(BaseLoss):
 
 
 class Unet3DLoss(BaseLoss):
-    def set_args(self, inputs, predictions, model):
+    def set_args(self, batch, predictions, model):
         """
         Compute the weighted loss with respect to targets and predictions
 
@@ -208,12 +208,12 @@ class Unet3DLoss(BaseLoss):
             inputs (dict): dictionary of target values
             predictions (dict): dictionary of predicted values
         """
-
+        _, inputs = batch
         self.args = [("mse", "reconstruction", (inputs, predictions))]
 
 
 class Unet3DMetric(BaseLoss):
-    def set_args(self, inputs, predictions, model):
+    def set_args(self, batch, predictions, model):
         """
         Compute the weighted loss with respect to targets and predictions
 
@@ -221,7 +221,7 @@ class Unet3DMetric(BaseLoss):
             inputs (dict): dictionary of target values
             predictions (dict): dictionary of predicted values
         """
-
+        _, inputs = batch
         self.args = [("mse", "reconstruction", (inputs, predictions))]
 
 
