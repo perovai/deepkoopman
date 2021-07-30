@@ -1,9 +1,10 @@
 from pathlib import Path
+
 import h5py
 import numpy as np
 from torch.utils.data import DataLoader
 
-from aiphysim.utils import resolve
+from aiphysim.utils import resolve, temp_seed
 
 from .dataloader_spacetime import RB2DataLoader
 from .density_dataset import DatDensityDataset, H5DensityDataset, SplitH5DensityDataset
@@ -60,14 +61,16 @@ def create_datasets(opts):
         h5_path = resolve(opts.data_file)
         with h5py.File(h5_path, "r") as archive:
             n_samples = len(archive)
-        indices = np.random.permutation(n_samples)
+
+        with temp_seed(123):
+            indices = np.random.permutation(n_samples)
 
         train_indices = indices[: int(opts.train_ratio * n_samples)]
         val_indices = indices[int(opts.train_ratio * n_samples) :]
 
         return {
-            "train": SplitH5DensityDataset(h5_path, train_indices),
-            "val": SplitH5DensityDataset(h5_path, val_indices),
+            "train": SplitH5DensityDataset(h5_path, train_indices, lims["train"]),
+            "val": SplitH5DensityDataset(h5_path, val_indices, lims["val"]),
         }
 
     if dataset_type == "datdensity":

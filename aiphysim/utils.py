@@ -1,4 +1,5 @@
 import ast
+import contextlib
 import os
 from collections import defaultdict
 from os.path import expandvars
@@ -317,3 +318,13 @@ def timeit(func):
         return return_values
 
     return wrapper_time
+
+
+@contextlib.contextmanager
+def temp_seed(seed):
+    state = np.random.get_state()
+    np.random.seed(seed)
+    try:
+        yield
+    finally:
+        np.random.set_state(state)

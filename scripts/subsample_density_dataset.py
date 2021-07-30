@@ -4,7 +4,6 @@ from pathlib import Path
 import h5py
 import minydra
 import numpy as np
-
 from tqdm import tqdm
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))

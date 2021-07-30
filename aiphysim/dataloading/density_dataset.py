@@ -90,10 +90,14 @@ class H5DensityDataset(Dataset):
 
 
 class SplitH5DensityDataset(Dataset):
-    def __init__(self, h5_path, indices):
+    def __init__(self, h5_path, indices, limit):
         self.h5_path = h5_path
         self.indices = indices
+        self.limit = limit
         self._archive = None
+
+        if self.limit > 0:
+            self.indices = self.indices[:limit]
 
     @property
     def archive(self):
