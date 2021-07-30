@@ -222,13 +222,14 @@ class UNet3d(nn.Module):  # pylint: disable=too-many-instance-attributes
         exp_kernel_size = prev_exp_fac - next_exp_fac + 1
         return exp_kernel_size, next_exp_fac
 
-    def forward(self, x):
+    def forward(self, batch):
         """Forward method.
         Args:
           x: `[batch, in_features, igres[0], igres[1], igres[2]]` tensor, input voxel grid.
         Returns:
           `[batch, out_features, ogres[0], ogres[1], ogres[2]]` tensor, output voxel grid.
         """
+        x, _ = batch
         x = self.conv_in(x)
         x_dns = [x]
         for mod, pool_op in zip(self.down_modules, self.down_pools):
