@@ -1,0 +1,26 @@
+data_folder: /network/projects/_groups/aiphysim_users/dedalus_data/snap_Pr_3_Ra_100000
+dataset_type: spacetime
+dataset_file: snapshots.h5
+batch_size: 64
+ratio:
+  train: 0.7
+  val: 0.2
+normalize: True
+timesteps: 4
+
+model_type: 3dunet
+
+in_features: 4
+out_features: 32
+igres: [4, 32, 32]
+ogres: null
+nf: 16
+mf: 512
+
+loss_type: 3dunet # loss processing scheme
+
+losses:
+  - reconstruction
+
+weights:
+  reconstruction: 1
