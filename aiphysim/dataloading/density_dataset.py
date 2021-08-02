@@ -87,3 +87,33 @@ class H5DensityDataset(Dataset):
         if self.limit > 0:
             return min([len(self.indices), self.limit])
         return len(self.indices)
+
+
+class SplitH5DensityDataset(Dataset):
+    def __init__(self, h5_path, indices, limit):
+        self.h5_path = h5_path
+        self.indices = indices
+        self.limit = limit
+        self._archive = None
+
+        if self.limit > 0:
+            self.indices = self.indices[:limit]
+
+    @property
+    def archive(self):
+        if self._archive is None:
+            self._archive = h5py.File(self.h5_path)
+        return self._archive
+
+    def __getitem__(self, index):
+        i = self.indices[index]
+        dataset = self.archive[f"trajectory_{i}"]
+        data = torch.from_numpy(dataset[:])
+        labels = dict(dataset.attrs)
+
+        return {"data": data, "labels": labels}
+
+    def __len__(self):
+        if self.limit > 0:
+            return min([len(self.indices), self.limit])
+        return len(self.indices)

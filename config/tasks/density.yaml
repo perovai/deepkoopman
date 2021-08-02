@@ -1,5 +1,7 @@
 data_folder: /network/tmp1/schmidtv/perovai
-dataset_type: datdensity
+data_file: /network/projects/_groups/aiphysim_users/density_data/FullDensityDataset.h5
+train_ratio: 0.8
+dataset_type: splith5density
 batch_size: 32
 density_matrix_shape: [3, 6]
 
