@@ -1,4 +1,5 @@
 from pathlib import Path
+import random
 
 import h5py
 import numpy as np
@@ -145,6 +146,10 @@ def create_dataloaders(opts, verbose=1):
     Returns:
         dict: dictionnary mapping mode (train/val/test) to dataloader
     """
+    def seed_worker(worker_id):
+        worker_seed = torch.initial_seed() % 2**32
+        np.random.seed(worker_seed)
+        random.seed(worker_seed)
 
     datasets = create_datasets(opts)
 
@@ -153,7 +158,7 @@ def create_dataloaders(opts, verbose=1):
 
     loaders = {
         k: DataLoader(
-            v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers
+            v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers, worker_init_fn=seed_worker
         )
         for k, v in datasets.items()
     }
