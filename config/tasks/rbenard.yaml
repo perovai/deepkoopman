@@ -10,6 +10,14 @@ timesteps: 4
 
 model_type: 3dunet
 
+# in_features: int, number of input features.
+# out_features: int, number of output features.
+# igres: tuple, input grid resolution in each dimension. each dimension must be integer
+# powers of 2.
+# ogres: tuple, output grid resolution in each dimension. each dimension must be integer
+# powers of 2. #NOTE for now must be same as igres or must be 2^k multipliers of igres.
+# nf: int, number of base feature layers.
+# mf: int, a cap for max number of feature layers throughout the network.
 in_features: 4
 out_features: 32
 igres: [4, 32, 32]
