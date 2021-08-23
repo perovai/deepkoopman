@@ -205,11 +205,11 @@ class Unet3DLoss(BaseLoss):
         Compute the weighted loss with respect to targets and predictions
 
         Args:
-            inputs (dict): dictionary of target values
-            predictions (dict): dictionary of predicted values
+            inputs (torch.Tensor): Tensor of target values
+            predictions (torch.Tensor): Tensor of predicted values
         """
-        _, inputs = batch
-        self.args = [("mse", "reconstruction", (inputs, predictions))]
+        _, targets = batch
+        self.args = [("mse", "reconstruction", (targets, predictions))]
 
 
 class Unet3DMetric(BaseLoss):
@@ -218,11 +218,73 @@ class Unet3DMetric(BaseLoss):
         Compute the weighted loss with respect to targets and predictions
 
         Args:
-            inputs (dict): dictionary of target values
-            predictions (dict): dictionary of predicted values
+            inputs (torch.Tensor): Tensor of target values
+            predictions (torch.Tensor): Tensor of predicted values
         """
-        _, inputs = batch
-        self.args = [("mse", "reconstruction", (inputs, predictions))]
+        _, targets = batch
+        divergence = Unet3DMetric.divergence_equation(predictions)
+        self.args = [
+            ("mse", "reconstruction", (targets, predictions)),
+            ("mse", "divergence_loss", (divergence, torch.zeros_like(predictions)))]
+
+    @staticmethod
+    def divergence_equation(predictions, x, z, normalized, **kwargs):
+        '''
+        This function computes the divergence of the velocity components of the input tensor.
+        Args:
+            prediction (torch.Tensor): Tensor of shape (B,T,C,H,W) or (T,C,H,W) or (C,H,W)
+            x (torch.Tensor): Tensor of x-points where the function is sampled
+            z (torch.Tensor): Tensor of z-points where the function is sampled
+            normalized (bool): Checks if the data is normalized with a zero mean and unit variance
+        '''
+        ndims = len(predictions.shape)
+
+        if ndims == 5:
+            u = predictions[:, :, 2]
+            w = predictions[:, :, 3]
+            if normalized:
+                mean = kwargs['mean']
+                std = kwargs['std']
+                # De-normalize the tensors before applying the divergence
+                u = u * mean[2] + std[2]
+                w = w * mean[3] + std[3]
+
+            _, ux = torch.gradient(u, spacing=(z, x), axis=(2, 3))
+            wz, _ = torch.gradient(w, spacing=(z, x), axis=(2, 3))
+
+            div = ux + wz
+            return div
+        elif ndims == 4:
+            u = predictions[:, 2]
+            w = predictions[:, 3]
+            if normalized:
+                mean = kwargs['mean']
+                std = kwargs['std']
+                # De-normalize the tensors before applying the divergence
+                u = u * mean[2] + std[2]
+                w = w * mean[3] + std[3]
+
+            _, ux = torch.gradient(u, spacing=(z, x), axis=(1, 2))
+            wz, _ = torch.gradient(w, spacing=(z, x), axis=(1, 2))
+
+            div = ux + wz
+            return div
+        elif ndims == 3:
+            u = predictions[2]
+            w = predictions[3]
+            if normalized:
+                mean = kwargs['mean']
+                std = kwargs['std']
+                # De-normalize the tensors before applying the divergence
+                u = u * mean[2] + std[2]
+                w = w * mean[3] + std[3]
+
+            _, ux = torch.gradient(u, spacing=(z, x), axis=(0, 1))
+            wz, _ = torch.gradient(w, spacing=(z, x), axis=(0, 1))
+            div = ux + wz
+            return div
+        else:
+            raise Exception('You cant use less than three dimensions!')
 
 
 def get_loss_and_metrics(opts):

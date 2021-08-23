@@ -147,6 +147,7 @@ def create_dataloaders(opts, verbose=1):
         dict: dictionnary mapping mode (train/val/test) to dataloader
     """
     def seed_worker(worker_id):
+        # https://discuss.pytorch.org/t/reproducibility-with-all-the-bells-and-whistles/81097
         worker_seed = torch.initial_seed() % 2**32
         np.random.seed(worker_seed)
         random.seed(worker_seed)
