@@ -13,14 +13,12 @@ logger = logging.getLogger(__name__)
 """
 
     This script generate a h5 file that contains the spatio-temporal evolution of temperature, pressure and velocity
-    from the 2D rayleigh-bénard convection.
+    from the 2D rayleigh-benard convection.
     Args:
         lx: float, Physical length in x dimension. (default: 5.0)
         lz: float, Physical length in z dimension. (default: 1.0)
         nx: int, number of pixels in x dimension. (default: 128)
         nz: int, number of pixels in z dimension. (default: 64)
-        train: float, portion of the dataset to go to the train set. (default: 0.7)
-        val: float, portion of the dataset to go to the validation set. (default: 0.2)
         dt: float, timestep in seconds between frames in simulation time. (default: 1e-5)
         stop_sim_time: float, Simulation stop time in seconds. (default: 50)
         rayleigh: float, Simulation Rayleigh number. (default: 15e4)
@@ -60,18 +58,6 @@ def get_args():
         help="Simulation resolution in z dimension. (default: 64)",
     )
     parser.add_argument(
-        "--train",
-        default=0.7,
-        type=float,
-        help="Portion of the dataset to go to the train set. (default: 0.7)",
-    )
-    parser.add_argument(
-        "--val",
-        default=0.2,
-        type=float,
-        help="Portion of the dataset to go to the validation set. (default: 0.2)",
-    )
-    parser.add_argument(
         "--dt",
         default=1e-3,
         type=float,
@@ -97,7 +83,7 @@ def get_args():
     )
     parser.add_argument(
         "--ampl_noise",
-        default=1e-1,
+        default=1e-3,
         type=float,
         help="Amplitude of the noise in the initial conditions. (default: 1e-1)",
     )
@@ -129,35 +115,32 @@ if __name__ == "__main__":
     Prandtl = args.prandtl
     Rayleigh = args.rayleigh
 
-    fname = f"snap_Pr_{Prandtl}_Ra_{int(Rayleigh)}_seed_{args.seed}_noise_{args.ampl_noise}_stop_sim_time_{args.stop_sim_time}_dt_{args.dt}_train_{args.train}_val_{args.val}"  # file name where experiments will be stored
-
+    fname = (f"lx_{Lx}|lz_{Lz}|res_x_{nx}|res_z_{nz}|dt_{args.dt}|stop_sim_time_{args.stop_sim_time}|rayleigh_{Rayleigh}|prandtl_{Prandtl}|seed_{args.seed}|ampl_{args.ampl_noise}|").replace('.', '-')  # file name where experiments will be stored
     # Create bases and domain
-    x_basis = de.Fourier("x", nx, interval=(0, Lx), dealias=3 / 2)
-    z_basis = de.Chebyshev("z", nz, interval=(0, Lz), dealias=3 / 2)
+    x_basis = de.Fourier('x', nx, interval=(0, Lx), dealias=3 / 2)
+    z_basis = de.Chebyshev('z', nz, interval=(-Lz / 2, Lz / 2), dealias=3 / 2)
     domain = de.Domain([x_basis, z_basis], grid_dtype=np.float64)
 
-    problem = de.IVP(domain, variables=["p", "u", "w", "uz", "wz", "T", "Tz"])
-    problem.meta["p", "T", "u", "w"]["z"]["dirichlet"] = True
-    problem.parameters["Pr"] = Prandtl
-    problem.parameters["Ra"] = Rayleigh
+    problem = de.IVP(domain, variables=['p', 'T', 'u', 'w', 'Tz', 'uz', 'wz'])
+    problem.meta['p', 'T', 'u', 'w']['z']['dirichlet'] = True
+    problem.parameters['P'] = (Rayleigh * Prandtl)**(-1 / 2)
+    problem.parameters['R'] = (Rayleigh / Prandtl)**(-1 / 2)
+    problem.parameters['F'] = F = 1
     # Heat Transfer Equation
-    problem.add_equation("dt(T) - (1 / Pr)*(dx(dx(T)) + dz(Tz)) = -(u*dx(T) + w*Tz)")
+    problem.add_equation("dt(T) - P*(dx(dx(T)) + dz(Tz))             = -(u*dx(T) + w*Tz)")
     # Momentum equations in x-z
-    problem.add_equation("dt(u) + dx(p) - dx(dx(u)) - dz(uz) = -(u*dx(u) + w*uz)")
-    problem.add_equation(
-        "dt(w) + dz(p) - dx(dx(w)) - dz(wz) - (Ra / Pr)*T = -(u*dx(w) + w*wz)"
-    )
+    problem.add_equation("dt(u) - R*(dx(dx(u)) + dz(uz)) + dx(p)     = -(u*dx(u) + w*uz)")
+    problem.add_equation("dt(w) - R*(dx(dx(w)) + dz(wz)) + dz(p) - T = -(u*dx(w) + w*wz)")
     # Mass Conservation Equation
     problem.add_equation("dx(u) + wz = 0")
     # u_x - du/dx = 0
+    problem.add_equation("Tz - dz(T) = 0")
     problem.add_equation("uz - dz(u) = 0")
     problem.add_equation("wz - dz(w) = 0")
-    problem.add_equation("Tz - dz(T) = 0")
-
     # Fixed temperature at top boundary
-    problem.add_bc("right(T) = 0")
-    # Fixed flux on bottom boundary
-    problem.add_bc("left(Tz) = -1")
+    problem.add_bc("right(T) = -0.5")
+    # Fixed temperature at bottom boundary
+    problem.add_bc("left(T) = 0.5")
     # No slip boundary conditions
     problem.add_bc("left(u) = 0")
     problem.add_bc("left(w) = 0")
@@ -165,7 +148,7 @@ if __name__ == "__main__":
     problem.add_bc("right(w) = 0", condition="(nx != 0)")
     problem.add_bc("right(p) = 0", condition="(nx == 0)")
 
-    solver = problem.build_solver(de.timesteppers.RK443)
+    solver = problem.build_solver(de.timesteppers.RK222)
 
     x = domain.grid(0)
     z = domain.grid(1)
@@ -179,40 +162,31 @@ if __name__ == "__main__":
     # Linear background + perturbations damped at walls
     zb, zt = z_basis.interval
     pert = args.ampl_noise * noise * (zt - z) * (z - zb)
-    T["g"] += pert
-    T.differentiate("z", out=Tz)
+    T['g'] += F * pert
+    T.differentiate('z', out=Tz)
 
-    solver.stop_sim_time = args.stop_sim_time
-    solver.stop_wall_time = np.inf
-    solver.stop_iteration = np.inf
     dt = args.dt
+    stop_sim_time = args.stop_sim_time
+    fh_mode = 'overwrite'
+
+    solver.stop_sim_time = stop_sim_time
 
     # Analysis files
-    snapshots = solver.evaluator.add_file_handler(fname, sim_dt=1e-3, max_writes=200)
-    snapshots.add_task(
-        "0.5 * (u ** 2 + w ** 2)", layout="g", name="KE"
-    )  # Kinetic energy
-    snapshots.add_task(
-        "sqrt(u ** 2 + w ** 2)", layout="g", name="|uvec|"
-    )  # Norm of the velocity
+    snapshots = solver.evaluator.add_file_handler(fname, sim_dt=dt, max_writes=50, mode=fh_mode)
     snapshots.add_system(solver.state)
+    snapshots.add_task(
+        "0.5 * (u ** 2 + w ** 2)", layout="g", name="TKE"
+    )  # Kinetic energy
+    snapshots.add_task("dx(u) + wz", layout='g', name='div_equation')  # Divergence
 
     # CFL
-    CFL = flow_tools.CFL(
-        solver,
-        initial_dt=dt,
-        cadence=10,
-        safety=0.5,
-        max_change=1.5,
-        min_change=1,
-        max_dt=1e-3,
-        threshold=0.05,
-    )
-    CFL.add_velocities(("u", "w"))
+    CFL = flow_tools.CFL(solver, initial_dt=dt, cadence=10, safety=1,
+                         max_change=1.5, min_change=0.5, max_dt=dt, threshold=0.05)
+    CFL.add_velocities(('u', 'w'))
 
     # Flow properties
     flow = flow_tools.GlobalFlowProperty(solver, cadence=10)
-    flow.add_property("sqrt(u*u + w*w) / Ra", name="Re")
+    flow.add_property("sqrt(u*u + w*w) / R", name="Re")
 
     # Start solving
     logger.info("Starting loop")
