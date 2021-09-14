@@ -114,8 +114,8 @@ if __name__ == "__main__":
     # Physical constants
     Prandtl = args.prandtl
     Rayleigh = args.rayleigh
-
-    fname = (f"lx_{Lx}|lz_{Lz}|res_x_{nx}|res_z_{nz}|dt_{args.dt}|stop_sim_time_{args.stop_sim_time}|rayleigh_{Rayleigh}|prandtl_{Prandtl}|seed_{args.seed}|ampl_{args.ampl_noise}|").replace('.', '-')  # file name where experiments will be stored
+    # File name where experiments will be stored
+    fname = (f"lx_{Lx}|lz_{Lz}|res_x_{nx}|res_z_{nz}|dt_{args.dt}|stop_sim_time_{args.stop_sim_time}|rayleigh_{Rayleigh}|prandtl_{Prandtl}|seed_{args.seed}|ampl_{args.ampl_noise}|").replace('.', '-')
     # Create bases and domain
     x_basis = de.Fourier('x', nx, interval=(0, Lx), dealias=3 / 2)
     z_basis = de.Chebyshev('z', nz, interval=(-Lz / 2, Lz / 2), dealias=3 / 2)
