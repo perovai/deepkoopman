@@ -58,16 +58,20 @@ class ConvLSTMCell(nn.Module):
 
 
 class ConvLSTM(nn.Module):
-    def __init__(self, nf, in_chan, downsample):
+    def __init__(self, opts):
         super(ConvLSTM, self).__init__()
 
-        """ ARCHITECTURE
-        # Encoder (ConvLSTM)
-        # Encoder Vector (final hidden state of encoder)
-        # Decoder (ConvLSTM) - takes Encoder Vector as input
-        # Decoder (3D CNN) - produces regression predictions for our model
-
+        """ Convolutional LSTM: "Convolutional LSTM Network: A Machine Learning Approach for Precipitation Nowcasting"
+        Args:
+          nf: int, number of feature channels.
+          in_chan: int, number of input channels.
+          downsample: tuple, if set to True, the model expects a low-resolution input and uses ConvTranspose3d to upsample the resolution, otherwise no super-resolution is performed and the model uses Conv3d instead.
         """
+
+        nf = opts.nf
+        in_chan = opts.in_chan
+        downsample = opts.downsample
+
         self.encoder_1_convlstm = ConvLSTMCell(input_dim=in_chan,
                                                hidden_dim=nf,
                                                kernel_size=(3, 3),
