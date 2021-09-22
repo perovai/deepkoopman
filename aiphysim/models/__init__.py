@@ -1,7 +1,7 @@
 from .density import DynamicLatentModel
 from .koopman import DeepKoopman
 from .spacetime import SpaceTime
-from .unet import UNet3d
+from .unet3d import UNet3d
 
 
 def create_model(opts):
