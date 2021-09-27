@@ -4,6 +4,7 @@ import random
 import h5py
 import numpy as np
 from torch.utils.data import DataLoader
+import torch
 
 from aiphysim.utils import resolve, temp_seed
 

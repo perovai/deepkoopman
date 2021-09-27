@@ -1,7 +1,7 @@
-data_folder: /network/projects/_groups/aiphysim_users/dedalus_data/snap_Pr_3_Ra_100000
+data_folder: /network/projects/_groups/aiphysim_users/dedalus_data/lx_4-0|lz_1-0|res_x_512|res_z_128|dt_0-0625|stop_sim_time_50|rayleigh_1000000-0|prandtl_2|seed_21|
 dataset_type: spacetime
 dataset_file: snapshots.h5
-batch_size: 64
+batch_size: 16
 ratio:
   train: 0.7
   val: 0.2
@@ -19,7 +19,7 @@ model_type: 3dunet
 # nf: int, number of base feature layers.
 # mf: int, a cap for max number of feature layers throughout the network.
 in_features: 4
-out_features: 32
+out_features: 1
 igres: [4, 32, 32]
 ogres: null
 nf: 16
