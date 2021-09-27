@@ -7,6 +7,11 @@ class SpaceTime(nn.Module):
         # TODO: Add things like no. of hidden layers to opts
         pass
 
+    def forward(self, x):
+    	# Test model, output = input
+    	predictions = x
+    	return predictions
+
 
 class LSTM(nn.Module):
     # This class is largely derived from

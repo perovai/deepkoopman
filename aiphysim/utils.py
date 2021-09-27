@@ -5,6 +5,7 @@ from collections import defaultdict
 from os.path import expandvars
 from pathlib import Path
 from time import time
+import random
 
 import numpy as np
 import torch
@@ -139,6 +140,20 @@ def new_unique_path(path):
 
     return path
 
+def seed_everything(seed=42):
+    """
+    Sets the seed to the same value across pytorch, python and numpy and ensures reproducibility.
+    See https://discuss.pytorch.org/t/reproducibility-with-all-the-bells-and-whistles/81097
+    Args:
+        seed (int): The value of the seed, default:42
+    """
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 def make_output_dir(path, dev=False):
     """

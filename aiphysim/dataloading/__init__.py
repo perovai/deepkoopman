@@ -1,8 +1,10 @@
 from pathlib import Path
+import random
 
 import h5py
 import numpy as np
 from torch.utils.data import DataLoader
+import torch
 
 from aiphysim.utils import resolve, temp_seed
 
@@ -96,10 +98,10 @@ def create_datasets(opts):
         else:
             normalize = True
 
-        try:
+        if "timesteps" in opts:
             timesteps = opts.timesteps
-        except Exception as e:
-            raise KeyError(e)
+        else:
+            raise Exception("You should provide a value of 'timesteps' in the yaml configuration file!")
 
         return {
             "train": RB2DataLoader(
@@ -145,6 +147,11 @@ def create_dataloaders(opts, verbose=1):
     Returns:
         dict: dictionnary mapping mode (train/val/test) to dataloader
     """
+    def seed_worker(worker_id):
+        # https://discuss.pytorch.org/t/reproducibility-with-all-the-bells-and-whistles/81097
+        worker_seed = torch.initial_seed() % 2**32
+        np.random.seed(worker_seed)
+        random.seed(worker_seed)
 
     datasets = create_datasets(opts)
 
@@ -153,7 +160,7 @@ def create_dataloaders(opts, verbose=1):
 
     loaders = {
         k: DataLoader(
-            v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers
+            v, batch_size, shuffle=k == "train", pin_memory=True, num_workers=workers, worker_init_fn=seed_worker
         )
         for k, v in datasets.items()
     }
